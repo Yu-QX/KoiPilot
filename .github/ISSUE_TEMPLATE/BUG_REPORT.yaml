@@ -1,0 +1,132 @@
+name: Bug Report
+description: Create a detailed bug report.
+title: 'FIX(YYYYMMDD): '
+labels: ['bug', 'triage']
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # 🐛 Bug Report Notice
+
+        Thank you for taking the time to file an issue! Please fill out the template below so we can better understand and address your problem.
+
+        🔍 **Before submitting**, please search for existing issues or discussions. If there's already one, feel free to add your comments there instead of creating a new issue.
+
+        📚 Refer to [CONTRIBUTING.md](../CONTRIBUTING.md) before making any changes.
+
+  - type: checkboxes
+    id: issue-check
+    attributes:
+      label: ✅ Prerequisites
+      description: Confirm the following before proceeding
+      options:
+        - label: I have searched the existing issues and discussions.
+          required: true
+        - label: I am using the latest version of KoiPilot.
+          required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: 🖥️ KoiPilot Version
+      description: Specify the version (e.g., v0.0.1)
+    validations:
+      required: true
+
+  - type: input
+    id: operating-system
+    attributes:
+      label: 🖥️ Operating System
+      description: Specify the OS (e.g., Windows 11, macOS Sonoma, Ubuntu 22.04)
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: 🖥️ Environment
+      description: Include other relevant information about your environment (e.g., Light/Dark Mode, etc.)
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: 🤔 Expected Behavior
+      description: Describe what should happen under normal conditions.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: 🤔 Actual Behavior
+      description: Describe what actually happened when the bug occurred.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: 🕵️‍♂️ Steps to Reproduce
+      description: |
+        Provide clear and precise steps that reproduce the issue. These should be detailed enough for anyone to follow without needing extra context—include settings, configuration, commands, inputs, and prerequisites.
+        
+        ⚠️ **Incomplete or ambiguous reproduction steps may result in your issue being closed.**
+      placeholder: |
+        Example:
+        1. Navigate to Settings > General.
+        2. Toggle on "Auto-save" option.
+        3. Enter text into the editor.
+        4. Click Save and observe no change occurs.
+        
+        Include exact values, configurations, and environment variables used.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs-screenshots
+    attributes:
+      label: 📎 Logs & Screenshots
+      description: Attach error messages, console logs, or screenshots that help us diagnose the issue.
+      placeholder: Paste logs from the browser console, terminal, or upload screenshots.
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: 📎 Additional Information
+      description: Add any other context, such as videos, GIFs, or related links.
+
+  - type: checkboxes
+    id: availability
+    attributes:
+      label: 👀 Are You Willing to Help Fix This?
+      description: Let us know if you're interested in contributing to the fix.
+      options:
+        - label: I am willing to implement this fix independently.
+        - label: I am willing to implement this fix with help from others.
+        - label: I can assist during development but will need support.
+        - label: I'm just reporting the issue.
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: 📝 Final Confirmation
+      description: Please confirm the following before submission.
+      options:
+        - label: I have read and followed all instructions in `CONTRIBUTING.md`.
+          required: true
+        - label: I have provided complete, step-by-step reproduction instructions with no ambiguity.
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Note
+
+        Incomplete reports or those not following the template may be closed until further details are provided.
+
+        ---
+
+        🎉 Thank you again for contributing to *KoiPilot* ! We appreciate every piece of feedback 😊
