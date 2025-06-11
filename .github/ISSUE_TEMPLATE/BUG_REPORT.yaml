@@ -80,8 +80,8 @@ body:
         4. Click Save and observe no change occurs.
         
         Include exact values, configurations, and environment variables used.
-      validations:
-        required: true
+    validations:
+      required: true
 
   - type: textarea
     id: logs-screenshots
