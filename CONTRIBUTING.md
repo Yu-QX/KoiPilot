@@ -26,9 +26,7 @@ Please note that all "titles" **must** follow the format: `TYPE(Date): content`.
 - `REFACT`: for refactoring code or changing algorithm
 - `OTHERS`: if your commit doesn't fit into any of the above categories
 
-`Date` refers to the local date of the commit in your region, formatted as `YYYYMMDD`. Due to time zone differences, a variation of up to 24 hours is expected and won't affect the overall ordering of commits on the timeline.
-
-`content` should be concise and clearly describe the purpose of the commit.
+`Date` is the date of the commit, in the format of `YYYYMMDD`. `content` should be short and descriptive.
 
 > e.g. `DOCS(20250610): Write a better README.md`
 
