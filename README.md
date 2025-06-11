@@ -1,27 +1,26 @@
 # KoiPilot
 
-> Chinese name: “赤鲤” (Red Carp)
-> Created on 2025-06-10
+> Chinese name: 赤鲤 (*Chì Lǐ*, Red Carp)  
 
-*KoiPilot* is a minimalist yet smart file and folder manager with a twist — it's also your desktop companion. Built <u>entirely with Python's standard libraries</u> and connected to powerful AI APIs, KoiPilot combines everyday productivity with a touch of personality and intelligence.
+*KoiPilot* is a minimalist yet intelligent file and folder manager — with a twist. It also serves as your AI-powered desktop companion. Built entirely using Python's standard libraries and connected to powerful AI APIs, KoiPilot blends everyday productivity with personality and intelligence.
 
-*"KoiPilot"* stands for good luck, vitality, and calm efficiency — flowing through your file system like a koi in water.
+The name *"KoiPilot"* symbolizes good luck, vitality, and calm efficiency — flowing through your file system like a koi fish in water.
 
 ---
 
 ## ✨ Features
 
-- 🐈 **AI-Powered Companion**  
-  A small, floating assistant on your screen — not just useful, but delightful.
+- 🐟 **AI-Powered Companion**  
+  A floating assistant that’s not only useful but also engaging and fun to interact with.
 
-- 📂 **File & Folder Management**  
-  Navigate, open, rename, and organize your files and directories effortlessly.
+- 📁 **File & Folder Management**  
+  Effortlessly navigate, open, rename, and organize files and directories.
 
-- 🛠️ **Zero Dependencies**  
-  Written with 100% Python standard libraries for maximum portability and transparency.
+- 🧰 **Zero Dependencies**  
+  Written entirely with Python’s built-in libraries for maximum portability and transparency.
 
-- 🧠 **Modular API Support**  
-  Easily swap or extend AI backend providers.
+- 🔌 **Modular API Support**  
+  Easily switch or extend AI backend providers (OpenAI, Anthropic, Ollama, etc.).
 
 ---
 
@@ -29,13 +28,13 @@
 
 ### Prerequisites
 
-- Python 3.5+
-- An AI backend (e.g., Ollama running locally or configured)
+- Python 3.5 or newer
+- An AI backend configured (e.g., Ollama running locally)
 
 ### Installation
 
 ```bash
-git clone ??
+git clone https://github.com/Yu-QX/KoiPilot.git
 ```
 
 > ✅ Note: No external dependencies required unless you enable optional features.
@@ -44,36 +43,41 @@ git clone ??
 
 ## 🧩 Roadmap & History
 
-* [ ] Basic file & folder operations
-  * [ ] Classify and organize
-  * [ ] Search and locate
-  * [ ] Rename/Move/Remove in batches
-  * [ ] Add tags and write notes
-* [ ] GUI
-  * [ ] Configuration center
-  * [ ] Koi skin customization
-  * [ ] Keyboard shortcuts
-  * [ ] Language support
-  * [ ] Voice interaction
-* [ ] Backend
-  * [ ] Security
-  * [ ] More AI API support
-  * [ ] Customizable AI
-  * [ ] Automatic AI workflow
-* [ ] Plugin system for optional features
-  * [ ] More tools for AI tool-call
-  * [ ] Plugin desktop widgets
-  * [ ] Device management
-* [ ] More
-  * [ ] Data base organization
+### Core File Management
+- [ ] Classify and organize
+- [ ] Search and locate
+- [ ] Batch rename/move/remove
+- [ ] Add tags and write notes
+
+### GUI
+- [ ] Configuration center
+- [ ] Koi skin customization
+- [ ] Keyboard shortcuts
+- [ ] Multilingual support
+- [ ] Voice interaction
+
+### Backend
+- [ ] Security enhancements
+- [ ] More AI API integrations
+- [ ] Customizable AI behavior
+- [ ] Automated AI workflows
+
+### Plugin System
+- [ ] Plugin-based architecture for optional tools
+- [ ] AI tool-call plugins
+- [ ] Desktop widgets via plugins
+- [ ] Device management support
+
+### Additional Features
+- [ ] Database organization tools
 
 ---
 
 ## 🤝 Contributing
 
-Pull requests are welcome! Whether it’s feature suggestions, bug fixes, or even koi art — we'd love your help.
+Contributions are welcome! Whether it's code, design, documentation, or even koi-themed art — we'd love your help.
 
-Please follow our [Contributing Guidelines](CONTRIBUTING.md) for details.
+Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on how to get involved.
 
 ---
 
@@ -87,6 +91,8 @@ MIT License – feel free to use, modify, and share.
 
 - 🚀 Created on 2025-06-10
 
-> 💡 Note:
-> This is a work in progress. All features listed above are tentative and subject to change, and aren't implemented until marked so in `🧩 Roadmap & History`.
-> Some part (not all) of the project is written with the help of AI. Be carefull using it as training data.
+💡 **Note:**
+
+- This is a work in progress. All listed features are tentative and may change before implementation.
+
+- Some parts of the project were developed with the assistance of AI. Please be cautious when using this code as training data.
