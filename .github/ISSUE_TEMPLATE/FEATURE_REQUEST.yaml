@@ -59,6 +59,7 @@ body:
     id: availability
     attributes:
       label: 👀 Are You Willing to Help Implement This?
+      description: Let us know if you're interested in contributing to the feature.
       options:
         - label: I am willing to implement this feature independently.
         - label: I am willing to implement this feature with help from others.
