@@ -48,7 +48,7 @@ class Listener:
         Returns:
             str: The generated text.
         """
-        return self.listener.Generate(prompt, **kwargs)
+        return self.listener.Generate(prompt, **kwargs) # type: ignore
 
 
 if __name__ == "__main__":
