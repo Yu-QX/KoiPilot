@@ -101,13 +101,13 @@ body:
   - type: dropdown
     id: availability
     attributes:
-      label: 👀 Are You Willing to Help Implement This?
+      label: 👀 Are You Willing to Help Fix This?
       description: Let us know if you're interested in contributing to the fix.
       options:
-        - label: I am willing to implement this feature independently.
-        - label: I am willing to implement this feature with help from others.
-        - label: I can assist during development but will need help.
-        - label: I'm just sharing an idea.
+        - label: I am willing to implement this fix independently.
+        - label: I am willing to implement this fix with help from others.
+        - label: I can assist during development but will need support.
+        - label: I'm just reporting the issue.
     validations:
       required: true
 
