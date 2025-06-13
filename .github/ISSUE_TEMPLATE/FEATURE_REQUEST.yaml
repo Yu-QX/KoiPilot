@@ -55,15 +55,18 @@ body:
       label: 📎 Additional Context
       description: Add any other relevant information or screenshots about the feature request here.
 
-  - type: checkboxes
+  - type: dropdown
     id: availability
     attributes:
       label: 👀 Are You Willing to Help Implement This?
+      description: Let us know if you're interested in contributing to the feature.
       options:
         - label: I am willing to implement this feature independently.
         - label: I am willing to implement this feature with help from others.
         - label: I can assist during development but will need help.
         - label: I'm just sharing an idea.
+    validations:
+      required: true
 
   - type: markdown
     attributes:

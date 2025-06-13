@@ -98,7 +98,7 @@ body:
       label: 📎 Additional Information
       description: Add any other context, such as videos, GIFs, or related links.
 
-  - type: checkboxes
+  - type: dropdown
     id: availability
     attributes:
       label: 👀 Are You Willing to Help Fix This?
@@ -108,6 +108,8 @@ body:
         - label: I am willing to implement this fix with help from others.
         - label: I can assist during development but will need support.
         - label: I'm just reporting the issue.
+    validations:
+      required: true
 
   - type: checkboxes
     id: confirmation
