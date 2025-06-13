@@ -41,11 +41,11 @@ class OllamaListener:
             print(f"Error fetching models: {e}")
             return None
 
-    def GenerateDetail(self, prompt: str, **kwargs) -> Optional[dict]:
+    def GenerateRaw(self, prompt: str, **kwargs) -> Optional[dict]:
         # Check connection
         self.check_connection()
         if self.connection_error:
-            print("Cannot generate detail due to connection error.")
+            print("Cannot generate due to connection error.")
             return None
 
         # Prepare data
@@ -77,12 +77,64 @@ class OllamaListener:
             response.raise_for_status()
             return response.json()
         except (requests.exceptions.RequestException, json.JSONDecodeError) as e:
-            print(f"Error generating detail: {e}")
+            print(f"Error generating: {e}")
             return None
     
+    def ChatRaw(self, messages: list, **kwargs) -> Optional[dict]:
+        # Check connection
+        self.check_connection()
+        if self.connection_error:
+            print("Cannot chat due to connection error.")
+            return None
+        
+        # Prepare data
+        data = {
+            "messages": messages,
+            "stream": False,
+        }
+        for key, value in kwargs.items():
+            if value is not None:
+                data[key] = value
+
+        if "model" not in data:
+            data["model"] = self.pick_model()
+            if data["model"] is None:
+                print("No valid model found.")
+                return None
+        
+        # Chat
+        endpoint = "/api/chat"
+        full_url = urljoin(self.url, endpoint)
+        try:
+            response = requests.post(
+                full_url,
+                headers=self.headers,
+                json=data,
+                stream=False,
+            )
+            response.raise_for_status()
+            return response.json()
+        except (requests.exceptions.RequestException, json.JSONDecodeError) as e:
+            print(f"Error generating: {e}")
+            return None
+        
     def Generate(self, prompt: str, **kwargs) -> Optional[str]:
-        result = self.GenerateDetail(prompt, **kwargs)
+        result = self.GenerateRaw(prompt, **kwargs)
         if result is None:
             print("Generation failed!")
             return None
+        
         return result.get("response")
+
+    def Chat(self, messages: list, **kwargs) -> Optional[str]:
+        result = self.ChatRaw(messages, **kwargs)
+        if result is None:
+            print("Chatting failed!")
+            return None
+    
+        message = result.get("message")
+        if not isinstance(message, dict):
+            print("Unexpected content format in 'message'")
+            return None
+
+        return message.get("content")

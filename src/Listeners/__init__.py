@@ -50,7 +50,28 @@ class Listener:
         """
         return self.listener.Generate(prompt, **kwargs) # type: ignore
 
+    def Chat(self, messages: list, **kwargs) -> str:
+        """
+        Generate a response to a given message.
+
+        Args:
+            messages (str): The message list to generate a response to (history included).
+            **kwargs: Additional arguments for the AI API. Includes model, temperature, and other parameters.
+
+        Returns:
+            str: The generated response.
+        """
+        return self.listener.Chat(messages, **kwargs) # type: ignore
 
 if __name__ == "__main__":
     listener = Listener()
-    print(listener.Generate("Hello!"))
+    
+    print(listener.Generate("Hello!", seed=42))
+
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "Hello!"},
+        {"role": "assistant", "content": "Hello! 😊 How are you doing today? I'm here to help — feel free to ask me anything or just chat if that's what you're into too. What can I do for you?"},
+        {"role": "user", "content": "Introduce yourself."},
+    ]
+    print(listener.Chat(messages=messages, seed=42))
