@@ -90,6 +90,7 @@ MIT License – feel free to use, modify, and share.
 ## 🐾 Footprints
 
 - 🚀 Created on 2025-06-10
+- Completed basic functions for `Listeners` on 2025-06-13
 
 💡 **Note:**
 

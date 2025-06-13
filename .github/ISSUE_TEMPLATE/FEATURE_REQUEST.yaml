@@ -61,10 +61,10 @@ body:
       label: 👀 Are You Willing to Help Implement This?
       description: Let us know if you're interested in contributing to the feature.
       options:
-        - label: I am willing to implement this feature independently.
-        - label: I am willing to implement this feature with help from others.
-        - label: I can assist during development but will need help.
-        - label: I'm just sharing an idea.
+        - I am willing to implement this feature independently.
+        - I am willing to implement this feature with help from others.
+        - I can assist during development but will need help.
+        - I'm just sharing an idea.
     validations:
       required: true
 
