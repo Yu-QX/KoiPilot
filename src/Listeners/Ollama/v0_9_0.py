@@ -19,6 +19,9 @@ class OllamaListener:
             self.connection_error = True
         else:
             self.connection_error = False
+        
+        if self.api_key:
+            print("API key is currently not supported.")
 
     def check_connection(self) -> bool:
         try:
@@ -42,6 +45,7 @@ class OllamaListener:
             return None
 
     def GenerateRaw(self, prompt: str, **kwargs) -> Optional[dict]:
+        """The basic generation function"""
         # Check connection
         self.check_connection()
         if self.connection_error:
@@ -81,6 +85,7 @@ class OllamaListener:
             return None
     
     def ChatRaw(self, messages: list, **kwargs) -> Optional[dict]:
+        """The basic chat function"""
         # Check connection
         self.check_connection()
         if self.connection_error:
@@ -119,14 +124,19 @@ class OllamaListener:
             return None
         
     def Generate(self, prompt: str, **kwargs) -> Optional[str]:
+        """Generate returning with string"""
         result = self.GenerateRaw(prompt, **kwargs)
         if result is None:
             print("Generation failed!")
+            return None
+        if not isinstance(result, dict):
+            print("Unexpected content format in 'response'")
             return None
         
         return result.get("response")
 
     def Chat(self, messages: list, **kwargs) -> Optional[str]:
+        """Chat returning with string"""
         result = self.ChatRaw(messages, **kwargs)
         if result is None:
             print("Chatting failed!")
@@ -138,3 +148,35 @@ class OllamaListener:
             return None
 
         return message.get("content")
+
+    def GenerateJson(self, prompt: str, **kwargs) -> Optional[dict]:
+        """Generate returning with JSON"""
+        kwargs["format"] = "json"
+        result = self.GenerateRaw(prompt, **kwargs)
+        if result is None:
+            print("Generation failed!")
+            return None
+        if not isinstance(result, dict):
+            print("Unexpected content format in 'response'")
+        
+        response = result.get("response")
+        if not isinstance(response, str):
+            print("Response content is not a string, cannot parse as JSON.")
+            return None
+        
+        # Parse JSON
+        try:
+            # Find valid JSON boundaries
+            start_idx = response.find("{")
+            end_idx = response.rfind("}")
+            if start_idx == -1 or end_idx == -1 or end_idx <= start_idx:
+                print("No valid JSON structure found.")
+                return None
+
+            json_str = response[start_idx:end_idx + 1]
+            result_json = json.loads(json_str)
+        except json.JSONDecodeError:
+            print("Failed to parse JSON")
+            result_json = None
+
+        return result_json

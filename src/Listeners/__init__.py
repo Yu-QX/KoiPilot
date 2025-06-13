@@ -48,7 +48,8 @@ class Listener:
         Returns:
             str: The generated text.
         """
-        return self.listener.Generate(prompt, **kwargs) # type: ignore
+        result = self.listener.Generate(prompt, **kwargs)  # type: ignore
+        return result if result is not None else ""
 
     def Chat(self, messages: list, **kwargs) -> str:
         """
@@ -61,13 +62,32 @@ class Listener:
         Returns:
             str: The generated response.
         """
-        return self.listener.Chat(messages, **kwargs) # type: ignore
+        result = self.listener.Chat(messages, **kwargs) # type: ignore
+        return result if result is not None else ""
+    
+    def GenerateJson(self, prompt: str, **kwargs) -> dict:
+        """
+        Generate `json` based on a given prompt.
+
+        Args:
+            prompt (str): The prompt to generate from.
+            **kwargs: Additional arguments for the AI API. Includes model, temperature, and other parameters.
+
+        Returns:
+            dict: The generated `JSON`.
+        """
+        result = self.listener.GenerateJson(prompt, **kwargs) # type: ignore
+        return result if result is not None else {}
 
 if __name__ == "__main__":
     listener = Listener()
-    
-    print(listener.Generate("Hello!", seed=42))
 
+    print("\n\n\n>>> GenerateJson:")
+    prompt = "What can the weather be? Use json dictionary format with weather type as keys and explanations of each weather as values."
+    result_json = listener.GenerateJson(prompt, seed=42)
+    [print(f"{key}: {value}") for key, value in result_json.items()]
+
+    print("\n\n\n>>> Chat:")
     messages = [
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": "Hello!"},
@@ -75,3 +95,6 @@ if __name__ == "__main__":
         {"role": "user", "content": "Introduce yourself."},
     ]
     print(listener.Chat(messages=messages, seed=42))
+
+    print("\n\n\n>>> Generate:")
+    print(listener.Generate("Hello!", seed=42))
