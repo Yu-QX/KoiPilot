@@ -6,7 +6,7 @@ import logging
 # Add the 'src' directory to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
-from FileManager.FileOperations import FileOperator
+from FileManager.Operations import FileOperator, FolderOperator
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -45,7 +45,7 @@ def test_rename_and_move_file(tmp_path):
     # Define the new file name and destination folder
     new_file_name = "renamed_example.txt"
     destination_folder = tmp_path / "destination"
-    FileOperator.CreateFolder(str(destination_folder))
+    FolderOperator.CreateFolder(str(destination_folder))
     logger.info(f"Destination folder '{destination_folder}' created.")
 
     # Run the file operations using FileManager
