@@ -5,3 +5,6 @@ The `FileManager` module provides a set of functions for managing files and dire
 - [ ] Search and locate
 - [ ] Batch rename/move/remove
 - [ ] Add tags and write notes
+
+The `FileOperator` class provides methods for operating with files & folders. 
+It also contains security checks to prevent unauthorized access. *(Not Yet Implemented)*
