@@ -104,10 +104,10 @@ body:
       label: 👀 Are You Willing to Help Fix This?
       description: Let us know if you're interested in contributing to the fix.
       options:
-        - label: I am willing to implement this fix independently.
-        - label: I am willing to implement this fix with help from others.
-        - label: I can assist during development but will need support.
-        - label: I'm just reporting the issue.
+        - I am willing to implement this fix independently.
+        - I am willing to implement this fix with help from others.
+        - I can assist during development but will need support.
+        - I'm just reporting the issue.
     validations:
       required: true
 
