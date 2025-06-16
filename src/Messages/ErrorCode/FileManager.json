@@ -1,0 +1,14 @@
+{
+    "[210000,219999]": "FileManager Module Status Codes",
+    "210000": "Success",
+    "[210100,210199]": "FileOperations Status Codes",
+    "210100": "Success",
+    "210101": "Read Permission Denied",
+    "210102": "Write Permission Denied",
+    "210111": "Source File Not Found",
+    "210112": "Source Folder Not Found",
+    "210113": "Destination File Not Found",
+    "210114": "Destination Folder Not Found",
+    "210115": "Destination File Already Exists",
+    "210116": "Destination Folder Already Exists"
+}
