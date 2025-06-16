@@ -51,3 +51,17 @@ class FileOperator:
             return 210111  # Source File Not Found
         os.remove(file_path)
         return 210000  # Success
+    
+    @staticmethod
+    def CreateFolder(folder_path: str, exist_ok: bool = False) -> int:
+        """
+        Creates a new folder.
+
+        :param folder_path: The path of the folder to create.
+        :param exist_ok: If True, an existing folder will not cause an error.
+        :return: An error code indicating the result of the operation.
+        """
+        if os.path.exists(folder_path) and not exist_ok:
+            return 210113  # Folder Already Exists
+        os.makedirs(folder_path, exist_ok=exist_ok)
+        return 210000  # Success
