@@ -43,6 +43,9 @@ class Listener:
         :param kwargs: Additional arguments for the AI API. Includes model, temperature, and other parameters.
         :return: The generated text.
         """
+        # Check if the function is available
+        if not hasattr(self.listener, "Generate"):
+            return ""
         result = self.listener.Generate(prompt, **kwargs)  # type: ignore
         return result if result is not None else ""
 
@@ -54,6 +57,8 @@ class Listener:
         :param kwargs: Additional arguments for the AI API. Includes model, temperature, and other parameters.
         :return: The generated response.
         """
+        if not hasattr(self.listener, "Chat"):
+            return ""
         result = self.listener.Chat(messages, **kwargs) # type: ignore
         return result if result is not None else ""
     
@@ -65,5 +70,7 @@ class Listener:
         :param kwargs: Additional arguments for the AI API. Includes model, temperature, and other parameters.
         :return: The generated `JSON`.
         """
+        if not hasattr(self.listener, "GenerateJson"):
+            return {}
         result = self.listener.GenerateJson(prompt, **kwargs) # type: ignore
         return result if result is not None else {}
