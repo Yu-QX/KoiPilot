@@ -11,9 +11,9 @@ class DesktopKOI:
         # Define KOI variables
         self.mood = "standard"
 
-        self.load_animations()
+        # Launch window
+        self.load_animations()  # TODO: remember the location when last used
         self.setup_gui()
-
 
         # Bind events for dragging
         self.start_x = 0
@@ -49,7 +49,7 @@ class DesktopKOI:
         self.width = standard_animation[0].width()
         self.height = standard_animation[0].height()
 
-    def setup_gui(self, x: int = 10, y: int = 10, fps: int = 24) -> None:
+    def setup_gui(self, x: Optional[int] = None, y: Optional[int] = None, fps: int = 24) -> None:
         # Remove title bar & make it always on top
         self.root.title("KOI")
         self.root.overrideredirect(True)
@@ -60,6 +60,12 @@ class DesktopKOI:
         self.root.wm_attributes("-transparentcolor", "black")
 
         # Create the window
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        if x is None:
+            x = screen_width - self.width - 50
+        if y is None:
+            y = screen_height - self.height - 100
         self.x, self.y = x, y
         self.root.geometry(f"{self.width}x{self.height}+{self.x}+{self.y}")
 
