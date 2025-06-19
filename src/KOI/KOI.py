@@ -13,7 +13,14 @@ class DesktopKOI:
 
         self.load_animations()
         self.setup_gui()
-        self.animate()
+
+
+        # Bind events for dragging
+        self.start_x = 0
+        self.start_y = 0
+        self.root.bind("<ButtonPress-1>", self.on_drag_start)
+        self.root.bind("<B1-Motion>", self.on_drag_motion)
+        self.root.bind("<ButtonRelease-1>", self.on_drag_end)
 
         self.root.mainloop()
         
@@ -59,9 +66,25 @@ class DesktopKOI:
         # Display the frame
         self.fps = fps
         self.delay_frame = 1000 // fps
+        self.delay_animation = int(1000 * 0.5)
         self.label = tk.Label(self.root, image=self.current_animation[0], bg='black')
         self.label.pack()
- 
+        self.root.after(self.delay_animation, self.animate)
+
+    def on_drag_start(self, event):
+        """Store the initial mouse position when dragging starts."""
+        self.start_x = event.x
+        self.start_y = event.y
+
+    def on_drag_motion(self, event):
+        """Update the window position based on mouse movement."""
+        # Directly calculate the new window position using screen coordinates
+        self.root.geometry(f"+{event.x_root - self.start_x}+{event.y_root - self.start_y}")
+
+    def on_drag_end(self, event):
+        """Play animation after dragging ends."""
+        self.root.after(self.delay_animation, self.animate)
+
     def animate(self):
         """Animate for one cycle"""
         if not self.current_animation:
