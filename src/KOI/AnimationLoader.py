@@ -6,7 +6,7 @@ import tkinter as tk
 
 class AnimationLoader:
     @staticmethod
-    def LoadAnimations(animation_folder: str) -> Optional[dict[str, list[tk.PhotoImage]]]:
+    def LoadAnimations(animation_folder: str) -> dict[str, list[tk.PhotoImage]]:
         """
         Load all the animations from the given folder.
 
@@ -14,7 +14,7 @@ class AnimationLoader:
         :return: A dictionary of animations, where the key is the animation name (without `.gif`) and the value is the animation file.
         """
         if not animation_folder or not os.path.isdir(animation_folder):
-            return None
+            return {}  # TODO: Add error code
 
         animation_dict = {}
         folder_path = Path(animation_folder)
