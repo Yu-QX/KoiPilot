@@ -112,3 +112,7 @@ class FolderOperator:
         new_path = os.path.join(destination_folder, os.path.basename(folder_path))
         os.rename(folder_path, new_path)
         return 210000  # Success
+
+class Guard:
+    """Prevent illegal operations"""
+    # TODO: implement this
