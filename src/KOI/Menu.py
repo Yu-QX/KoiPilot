@@ -1,5 +1,8 @@
 import tkinter as tk
 
+# Developer Note: 
+# - `CamelCase` for variables and functions to export and `snake_case` for internal use 
+
 class KOIMenu(tk.Toplevel):
     def __init__(self, master):
         super().__init__(master)
@@ -10,51 +13,45 @@ class KOIMenu(tk.Toplevel):
         self.attributes('-topmost', True)
         self.configure(bg='black')
         self.wm_attributes("-transparentcolor", "black")
-        self.delay = 200
+        self.duration_fade = 200  # The duration of the fade in ms
+        self.delay = 100
         self.color_menu = "#333333"
         self.color_outline = "#444444"
+        self.color_text = "#FFFFFF"
+        self.color_target = "#666666"
         self.radius = 15
         self.width = 100  # Default width
         self.height = 20  # Default height
-        
+
         # Create a canvas for rounded rectangle background
         self.canvas = tk.Canvas(self, bg="black", highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True)
 
         # Define button list and create buttons
         self.buttons = []
-        self.button_texts = ["Option 1", "Option 2", "Option 3"]
-        for text in self.button_texts:
+        self.button_list = {
+            "Sort Files": self.button_relocate_files,
+            "Format Names": self.button_format_filenames,
+            "Chat": self.button_chat,
+        }  # TODO: Import `Messages` module
+        for text, action in self.button_list.items():
             btn = tk.Button(
                 self.canvas, text=text, 
-                command=lambda t=text: self.get_button_action(t)(), 
-                bg=self.color_menu, fg='white', bd=0, highlightthickness=0
+                command=action if action else lambda: None, 
+                bg=self.color_menu, fg=self.color_text, 
+                bd=0, highlightthickness=0
             )
-            self.buttons.append(btn)
 
-        # Layout buttons inside the canvas
+            # Bind hover effects
+            #btn.bind("<Enter>", lambda e, b=btn: b.configure(bg=self.color_target, fg="#00FF00"))
+            #btn.bind("<Leave>", lambda e, b=btn: b.configure(bg=self.color_menu, fg=self.color_text))
+            
+            self.buttons.append(btn)
         self.layout_buttons()
 
         # Hide menu initially
         self.withdraw()
-        
-    def get_button_action(self, text):
-        if text == "Option 1":
-            return self.option1_action
-        elif text == "Option 2":
-            return self.option2_action
-        return lambda: None  # Default no-op action to prevent None return
-    
-    def option1_action(self):
-        # Placeholder for option 1 functionality
-        print("Option 1 selected")
-        pass
-    
-    def option2_action(self):
-        # Placeholder for option 2 functionality
-        print("Option 2 clicked!")
-        pass
-    
+
     def layout_buttons(self):
         # Dynamically adjust width and height based on button count
         num_buttons = len(self.buttons)
@@ -72,18 +69,18 @@ class KOIMenu(tk.Toplevel):
 
         # Place buttons inside the rounded rectangle
         for i, btn in enumerate(self.buttons):
-            btn.place(relx=0.5, rely=(i + 0.5) / len(self.button_texts), anchor=tk.CENTER)
+            btn.place(relx=0.5, rely=(i + 0.5) / len(self.button_list), anchor=tk.CENTER)
 
-    def show(self):
+    def Show(self):
+        """Show the menu with a fade-in effect"""
         # Calculate position (centered relative to main window)
         master = self.master
         master.update_idletasks()  # Ensure we have current geometry values
-        
+
         # Get master window properties
         master_x = master.winfo_x()
         master_y = master.winfo_y()
         master_width = master.winfo_width()
-        master_height = master.winfo_height()
         center_x = int(master_x + (master_width / 2))
         center_y = int(master_y)
 
@@ -91,14 +88,44 @@ class KOIMenu(tk.Toplevel):
         menu_height = self.height  # Use dynamically calculated height
         post_x = center_x - (menu_width // 2)
         post_y = center_y - menu_height
- 
+
         # Record position
         self.x1, self.y1 = post_x, post_y
         self.x2, self.y2 = post_x + menu_width, post_y + menu_height
-        
+
         # Position window
         self.geometry(f"{menu_width}x{menu_height}+{post_x}+{post_y}")
-        self.master.after(self.delay, self.deiconify)
+        
+        # Start from hidden state; Gradually increase alpha using duration_fade
+        self.attributes("-alpha", 0.0)
+        self.deiconify()
+        steps = 10
+        step_delay = self.duration_fade // steps
+        for i in range(1, steps + 1):
+            self.after(i * step_delay, lambda a=i / steps: self.attributes("-alpha", a))
 
-    def hide(self):
-        self.master.after(self.delay, self.withdraw)
+    def Hide(self):
+        """Hide the menu with a fade-out effect"""
+        # Gradually decrease alpha using duration_fade
+        steps = 10
+        step_delay = self.duration_fade // steps
+        for i in range(steps, -1, -1):
+            self.after((steps - i) * step_delay, lambda a=i / steps: self.attributes("-alpha", a))
+
+        # After fading out, withdraw the window
+        self.after(self.duration_fade, self.withdraw)
+    
+    def button_chat(self):
+        """Activate chat mode"""
+        self.Hide()
+        # TODO: Implement chat mode
+    
+    def button_relocate_files(self):
+        """Choose files to relocate to different folders using AI"""
+        self.Hide()
+        # TODO: Implement relocate files mode
+    
+    def button_format_filenames(self):
+        """Format filenames in a folder using AI"""
+        self.Hide()
+        # TODO: Implement format filenames mode

@@ -4,6 +4,9 @@ import tkinter as tk
 from .AnimationLoader import AnimationLoader
 from .Menu import KOIMenu
 
+# Developer Note: 
+# - `CamelCase` for variables and functions to export and `snake_case` for internal use 
+
 class DesktopKOI:
     """The main class for the KOI"""
     def __init__(self, root):
@@ -90,7 +93,7 @@ class DesktopKOI:
         """Show the context menu within the bounds of the main animation."""
         if not self.menu_visible and not self.on_drag:
             self.menu_visible = True
-            self.menu.show()
+            self.menu.Show()
             
             # DEBUG
             self.clear_boundary()
@@ -103,7 +106,7 @@ class DesktopKOI:
         """Hide the context menu."""
         if self.menu_visible:
             self.menu_visible = False
-            self.menu.hide()
+            self.menu.Hide()
 
     def on_drag_start(self, event):
         """Store the initial mouse position when dragging starts."""
