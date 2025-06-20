@@ -13,9 +13,9 @@ class DesktopKOI:
         self.root = root
 
         # Define KOI variables (only a display for what will be used)
+        self.root.on_drag = False
         self.x, self.y = 0, 0
         self.height, self.width = 0, 0
-        self.on_drag = False
         self.animation_level = 0
         self.mood = ""
 
@@ -24,9 +24,8 @@ class DesktopKOI:
         self.setup_gui()        # TODO: remember the location when last used
 
         # Bind events for menu
-        self.menu_visible = False
         self.menu = KOIMenu(self.root)
-        self.root.bind("<Enter>", self.show_menu)
+        self.root.bind("<Enter>", self.menu.Show)
 
         # Bind events for dragging
         self.root.bind("<ButtonPress-1>", self.on_drag_start)
@@ -88,33 +87,13 @@ class DesktopKOI:
         self.canvas = tk.Canvas(self.rootdebug, bg='black', highlightthickness=0, width=screen_width, height=screen_height)
         self.canvas.place(x=0, y=0)
 
-
-    def show_menu(self, event=None):
-        """Show the context menu within the bounds of the main animation."""
-        if not self.menu_visible and not self.on_drag:
-            self.menu_visible = True
-            self.menu.Show()
-            
-            # DEBUG
-            self.clear_boundary()
-            self.draw_boundary(self.x, self.y, self.x + self.width, self.y + self.height)
-            self.draw_boundary(self.menu.x1, self.menu.y1, self.menu.x2, self.menu.y2, color="#0000FF")
-        
-        #self.root.after(3000, self.hide_menu)
-
-    def hide_menu(self, event=None):
-        """Hide the context menu."""
-        if self.menu_visible:
-            self.menu_visible = False
-            self.menu.Hide()
-
     def on_drag_start(self, event):
         """Store the initial mouse position when dragging starts."""
-        self.on_drag = True
+        self.root.on_drag = True
         self.start_x = event.x
         self.start_y = event.y
         self.animation_level = 10
-        self.hide_menu()
+        self.menu.Hide()
 
         # DEBUG
         self.clear_boundary()
@@ -130,7 +109,7 @@ class DesktopKOI:
         # get the current window position
         self.x, self.y = self.root.winfo_x(), self.root.winfo_y()
         self.animation_level = 0
-        self.on_drag = False
+        self.root.on_drag = False
 
         # DEBUG
         self.draw_boundary(self.x, self.y, self.x + self.width, self.y + self.height)

@@ -1,4 +1,6 @@
 import tkinter as tk
+from typing import Optional
+from .FunctionManager import FunctionManager
 
 # Developer Note: 
 # - `CamelCase` for variables and functions to export and `snake_case` for internal use 
@@ -26,6 +28,7 @@ class KOIMenu(tk.Toplevel):
         # Create a canvas for rounded rectangle background
         self.canvas = tk.Canvas(self, bg="black", highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True)
+        self.menu_visible = False
 
         # Define button list and create buttons
         self.buttons = []
@@ -51,6 +54,7 @@ class KOIMenu(tk.Toplevel):
 
         # Hide menu initially
         self.withdraw()
+        self.function_manager = FunctionManager()
 
     def layout_buttons(self):
         # Dynamically adjust width and height based on button count
@@ -71,8 +75,12 @@ class KOIMenu(tk.Toplevel):
         for i, btn in enumerate(self.buttons):
             btn.place(relx=0.5, rely=(i + 0.5) / len(self.button_list), anchor=tk.CENTER)
 
-    def Show(self):
+    def Show(self, event: Optional[tk.Event] = None):
         """Show the menu with a fade-in effect"""
+        if self.menu_visible or getattr(self.master, 'on_drag', False):
+            return
+        self.menu_visible = True
+
         # Calculate position (centered relative to main window)
         master = self.master
         master.update_idletasks()  # Ensure we have current geometry values
@@ -104,8 +112,12 @@ class KOIMenu(tk.Toplevel):
         for i in range(1, steps + 1):
             self.after(i * step_delay, lambda a=i / steps: self.attributes("-alpha", a))
 
-    def Hide(self):
+    def Hide(self, event: Optional[tk.Event] = None):
         """Hide the menu with a fade-out effect"""
+        if not self.menu_visible:
+            return
+        self.menu_visible = False
+        
         # Gradually decrease alpha using duration_fade
         steps = 10
         step_delay = self.duration_fade // steps
@@ -128,4 +140,4 @@ class KOIMenu(tk.Toplevel):
     def button_format_filenames(self):
         """Format filenames in a folder using AI"""
         self.Hide()
-        # TODO: Implement format filenames mode
+        self.master.after(0, self.function_manager.FormatName)

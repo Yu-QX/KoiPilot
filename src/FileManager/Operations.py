@@ -1,6 +1,8 @@
 import os
 import shutil
 
+# TODO: Log changes
+
 class FileOperator:
     """Methods for operating with files."""
     @staticmethod
