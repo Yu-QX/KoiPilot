@@ -112,6 +112,42 @@ class FolderOperator:
         new_path = os.path.join(destination_folder, os.path.basename(folder_path))
         os.rename(folder_path, new_path)
         return 210000  # Success
+    
+    @staticmethod
+    def GetSubFolders(folder_path: str) -> list[str]:
+        """
+        Get all sub folders in a folder
+
+        :param folder_path: The path of the folder
+        :return: A list of sub folders or an error code
+        """
+        if not os.path.exists(folder_path):
+            print("Error Code: 210114")  # Destination Folder Not Found
+            return []
+        if not os.path.isdir(folder_path):
+            print("Error Code: 210122")  # Folder Operation Error
+            return []
+
+        result = [entry.path for entry in os.scandir(folder_path) if entry.is_dir()]
+        return result
+
+    @staticmethod
+    def GetFiles(folder_path: str) -> list[str]:
+        """
+        Get all files in a folder
+
+        :param folder_path: The path of the folder
+        :return: A list of files or an error code
+        """
+        if not os.path.exists(folder_path):
+            print("Error Code: 210114")  # Destination Folder Not Found
+            return []
+        if not os.path.isdir(folder_path):
+            print("Error Code: 210122")  # Folder Operation Error
+            return []
+
+        result = [entry.path for entry in os.scandir(folder_path) if entry.is_file()]
+        return result
 
 class Guard:
     """Prevent illegal operations"""
