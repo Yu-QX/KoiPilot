@@ -1,3 +1,4 @@
+import threading
 import tkinter as tk
 from typing import Optional
 from .FunctionManager import FunctionManager
@@ -42,6 +43,8 @@ class KOIMenu(tk.Toplevel):
                 bg=self.color_menu, fg=self.color_text, 
                 bd=0, highlightthickness=0
             )
+            # Bind "Hide menu" on click
+            btn.bind("<Button-1>", lambda event, btn=btn: self.Hide())
 
             # Bind hover effects
             #btn.bind("<Enter>", lambda e, b=btn: b.configure(bg=self.color_target, fg="#00FF00"))
@@ -127,15 +130,13 @@ class KOIMenu(tk.Toplevel):
     
     def button_chat(self):
         """Activate chat mode"""
-        self.Hide()
         # TODO: Implement chat mode
     
     def button_relocate_files(self):
         """Choose files to relocate to different folders using AI"""
-        self.Hide()
         # TODO: Implement relocate files mode
     
     def button_format_filenames(self):
         """Format filenames in a folder using AI"""
-        self.Hide()
-        self.master.after(0, self.function_manager.FormatName)
+        # Run self.function_manager.FormatName on another thread, so the GUI doesn't freeze
+        threading.Thread(target=self.function_manager.FormatName).start()
