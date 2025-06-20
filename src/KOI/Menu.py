@@ -1,6 +1,7 @@
 import tkinter as tk
 from typing import Optional
 from .FunctionManager import FunctionManager
+from .Styling import Styling
 
 # Developer Note: 
 # - `CamelCase` for variables and functions to export and `snake_case` for internal use 
@@ -15,13 +16,10 @@ class KOIMenu(tk.Toplevel):
         self.attributes('-topmost', True)
         self.configure(bg='black')
         self.wm_attributes("-transparentcolor", "black")
-        self.duration_fade = 200  # The duration of the fade in ms
-        self.delay = 100
-        self.color_menu = "#333333"
-        self.color_outline = "#444444"
-        self.color_text = "#FFFFFF"
-        self.color_target = "#666666"
-        self.radius = 15
+        self.duration_fade = Styling.duration_fade
+        self.color_menu = Styling.color_background
+        self.color_text = Styling.color_text
+        self.radius = Styling.shape_corner_radius
         self.width = 100  # Default width
         self.height = 20  # Default height
 
