@@ -32,7 +32,7 @@ Please note that all "titles" **must** follow the format: `TYPE(Date): content`.
 
 > e.g. `DOCS(20250610): Write a better README.md`
 
-This helps everyone track what changes have been made across the project.
+This helps everyone track what changes have been made across the app.
 
 ### 1. Communication 🙋‍♂️
 
@@ -76,7 +76,7 @@ Documentation improvements are always welcome! You can help by:
 - Adding examples to the README or docstrings  
 - Writing or updating tutorials or usage guides  
 
-You can also contribute translations for parts of the project such as:
+You can also contribute translations for parts of the app such as:
 
 - AI prompt templates  
 - User interface elements  
