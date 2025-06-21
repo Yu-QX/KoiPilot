@@ -151,7 +151,7 @@ class FolderOperator:
             print("Error Code: 210114")  # Destination Folder Not Found
             return []
         if not os.path.isdir(folder_path):
-            print("Error Code: 210122")  # Folder Operation Error
+            print("Error Code: 210122")  # Folder Operation Error # TODO: add a new code
             return []
 
         if full_path:

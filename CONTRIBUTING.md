@@ -86,7 +86,6 @@ You can also contribute translations for parts of the app such as:
 ## 📝 Code Style
 
 - Use **Python 3.10+** syntax  
-- Follow [PEP 8](https://www.python.org/dev/peps/pep-0008/) for formatting and style  
 - Keep code clean and readable  
 - Add comments where needed to explain complex parts
 - `CamelCase` for variables and functions to export and `snake_case` for internal use

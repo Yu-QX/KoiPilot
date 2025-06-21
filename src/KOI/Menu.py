@@ -17,6 +17,7 @@ class KOIMenu(tk.Toplevel):
         self.attributes('-topmost', True)
         self.configure(bg='black')
         self.wm_attributes("-transparentcolor", "black")
+
         self.duration_fade = Styling.duration_fade
         self.color_menu = Styling.color_background
         self.color_text = Styling.color_text
@@ -75,6 +76,9 @@ class KOIMenu(tk.Toplevel):
         # Place buttons inside the rounded rectangle
         for i, btn in enumerate(self.buttons):
             btn.place(relx=0.5, rely=(i + 0.5) / len(self.button_list), anchor=tk.CENTER)
+        
+        # Draw lines between buttons
+        # TODO: add this
 
     def Show(self, event: Optional[tk.Event] = None):
         """Show the menu with a fade-in effect"""
