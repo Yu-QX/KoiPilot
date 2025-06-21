@@ -14,3 +14,7 @@ class Styling:
 
     # Shapes
     shape_corner_radius = 15
+
+    # Fonts
+    font_family = "Courier"
+    font_size = 12
