@@ -14,20 +14,24 @@ class OllamaListener:
             "Content-Type": "application/json"
         }
 
-        if not self.check_connection():
-            print("Failed to connect to Ollama server")
-            self.connection_error = True
-        else:
-            self.connection_error = False
-        
+        self.check_connection()
+
         if self.api_key:
             print("API key is currently not supported.")
 
     def check_connection(self) -> bool:
         try:
             response = requests.get(self.url)
-            return response.status_code == 200
+            self.connection_error = response.status_code != 200
+            if self.connection_error:
+                print("Failed to connect to Ollama server")
+                return False
+            else:
+                print("Connected to Ollama server")
+                return True
         except requests.exceptions.RequestException:
+            print("Failed to connect to Ollama server")
+            self.connection_error = True
             return False
 
     def pick_model(self) -> Optional[str]:

@@ -97,4 +97,4 @@ MIT License – feel free to use, modify, and share.
 
 - This is a work in progress. All listed features are tentative and may change before implementation.
 
-- Some parts of the project were developed with the assistance of AI. Please be cautious when using this code as training data.
+- Some parts of the app were developed with the assistance of AI. Please be cautious when using this code as training data.
