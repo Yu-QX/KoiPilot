@@ -21,6 +21,8 @@ class FunctionManager:
         port: Optional[int] = None
         api_key: Optional[str] = None
         version: Optional[str] = None
+        
+        self.on_task_format_name = False
 
         self.counsellor = Counsellor(model, api_type, host, port, api_key, version)
         self.listener = Listener(api_type, host, port, api_key, version)
@@ -39,10 +41,9 @@ class FunctionManager:
         # Set up GUI
         root = tk.Tk()
         root.title("Confirm Changes")
-        root.overrideredirect(True)
         root.attributes('-topmost', True)
         root.configure(bg='black')
-        root.wm_attributes("-transparentcolor", "black")
+        #root.wm_attributes("-transparentcolor", "black")
 
         color_bg = Styling.color_background
 
@@ -59,17 +60,23 @@ class FunctionManager:
             # Add labels and buttons
             original_label = tk.Label(line_list[idx], text=original_name, bg=color_bg, fg="white", font=Styling.font_family)
             original_label.pack(side=tk.LEFT, padx=5)
+            arrow = tk.Label(line_list[idx], text="->", bg=color_bg, fg="red", font=Styling.font_family)
+            arrow.pack(side=tk.LEFT, padx=5)
             suggested_label = tk.Label(line_list[idx], text=suggested_name, bg=color_bg, fg="white", font=Styling.font_family)
-            suggested_label.pack(side=tk.RIGHT, padx=5)
+            suggested_label.pack(side=tk.LEFT, padx=5)
 
             # Define button commands using lambda to capture current index
             def confirm_command(idx):
-                confirmations[idx] = True  # type: ignore
+                confirmations[idx] = True
                 line_list[idx].destroy()
+                if not None in confirmations:
+                    root.quit()
 
             def cancel_command(idx):
-                confirmations[idx] = False  # type: ignore
+                confirmations[idx] = False
                 line_list[idx].destroy()
+                if not None in confirmations:
+                    root.quit()
 
             confirm_button = tk.Button(line_list[idx], text="Confirm", bg="green", fg="white", font=Styling.font_family, command=lambda i=idx: confirm_command(i))
             confirm_button.pack(side=tk.RIGHT, padx=5)
@@ -111,12 +118,18 @@ class FunctionManager:
 
     def FormatName(self):
         """Format the names of files and folders in selected folder."""
+        if self.on_task_format_name:
+            messagebox.showwarning("Warning", "A task is already running.")
+            return
+        self.on_task_format_name = True
+
         # Get the selected folder with UI interaction
         root = tk.Tk()
         root.withdraw()  # Hide the main window
         selected_folder = filedialog.askdirectory(title="Select Folder to Format Names")  # TODO: Message
         if not selected_folder:
             messagebox.showinfo("No Folder Selected", "You did not select a folder.")
+            self.on_task_format_name = False
             return  # Exit if no folder is selected
 
         # Get the names of files and folders in the selected folder
@@ -135,6 +148,7 @@ class FunctionManager:
         self.changes = {**file_changes, **folder_changes}
         if not self.changes:
             messagebox.showinfo("No Changes", "No renaming suggestions were generated.")
+            self.on_task_format_name = False
             return
 
         # Get user confirmation with UI interaction
@@ -143,6 +157,7 @@ class FunctionManager:
         confirmed_changes = {}
         if len(confirm) != len(original_names):
             print("Error: Confirmation length does not match original names length.")
+            self.on_task_format_name = False
             return
         for original_name, confirmation in zip(original_names, confirm):
             if confirmation:
@@ -162,3 +177,4 @@ class FunctionManager:
                 print(f"Failed to rename '{original_name}' to '{suggested_name}'. Error code: {result}")
 
         messagebox.showinfo("Success", "Renaming completed successfully.")
+        self.on_task_format_name = False

@@ -45,7 +45,7 @@ class KOIMenu(tk.Toplevel):
                 bd=0, highlightthickness=0
             )
             # Bind "Hide menu" on click
-            btn.bind("<Button-1>", lambda event, btn=btn: self.Hide())
+            btn.bind("<Button-1>", lambda event, btn=btn: self.master.after(100, self.Hide))  # A little delay to allow the menu to hide after clicking is recieved. TODO: Auto change according to system performance.
 
             # Bind hover effects
             #btn.bind("<Enter>", lambda e, b=btn: b.configure(bg=self.color_target, fg="#00FF00"))
