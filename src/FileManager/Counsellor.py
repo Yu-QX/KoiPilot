@@ -41,6 +41,8 @@ def find_closest_match(string: str, options: list[str]) -> Optional[str]:
     Returns:
     Optional[str]: The most similar option, or None if no sufficiently similar option is found.
     """
+    if not options or not string:
+        return None                                                                              
     
     # Normalize options and input string to lowercase for case-insensitive matching
     normalized_options = [name.lower() for name in options]

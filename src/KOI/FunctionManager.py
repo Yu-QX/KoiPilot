@@ -1,7 +1,8 @@
 import sys, os, gc
+import threading
 import tkinter as tk
-from tkinter import filedialog, messagebox
 from typing import Optional
+from tkinter import filedialog, messagebox
 from Listeners import Listener
 from FileManager.Counsellor import Counsellor
 from FileManager.Operations import FileOperator, FolderOperator
@@ -23,6 +24,7 @@ class FunctionManager:
         version: Optional[str] = None
         
         self.on_task_format_name = False
+        self.on_task_sort_files = False
 
         self.counsellor = Counsellor(model, api_type, host, port, api_key, version)
         self.listener = Listener(api_type, host, port, api_key, version)
@@ -178,3 +180,75 @@ class FunctionManager:
 
         messagebox.showinfo("Success", "Renaming completed successfully.")
         self.on_task_format_name = False
+        return
+    
+    def SortFiles(self):
+        """Place files into appropriate folders."""
+        if self.on_task_sort_files:
+            messagebox.showwarning("Warning", "A task is already running.")
+            return
+        self.on_task_sort_files = True
+
+        # Get the folder containing all the files to be sorted with UI interaction
+        root = tk.Tk()
+        root.withdraw()
+        source_folder = filedialog.askdirectory(title="Select Folder to Sort")
+        if not source_folder:
+            messagebox.showinfo("No Folder Selected", "You did not select a folder.")
+            self.on_task_sort_files = False
+            return
+        
+        # Get the options of folder to sort into with UI interaction
+        destination_folder = filedialog.askdirectory(title="Select Folder to Sort Into (this will include all subfolders)")
+        if not destination_folder:
+            messagebox.showinfo("No Folder Selected", "You did not select a folder.")
+            self.on_task_sort_files = False
+            return
+        
+        # Get all the subfolders in the destination folder, and the files in the source folder
+        option_folder = FolderOperator.GetSubFolders(destination_folder)  # TODO: folder tree
+        files = FolderOperator.GetFiles(source_folder)
+
+        # Generate suggestions, and save the suggestions in local variable
+        self.changes = {}
+        threads = []
+        local_changes = {}
+
+        for file in files:
+            thread = threading.Thread(target=self._move_to_folder_thread, args=(file, option_folder, local_changes))
+            threads.append(thread)
+            thread.start()
+        for thread in threads:
+            thread.join()
+        self.changes.update(local_changes)
+
+        # Get user confirmation with UI interaction
+        confirm = self.confirmation_dialog()
+        original_files = self.changes.keys()
+        confirmed_changes = {}
+        if len(confirm) != len(original_files):
+            print("Error: Confirmation length does not match original files length.")
+            self.on_task_sort_files = False
+            return
+        for original_file, confirmation in zip(original_files, confirm):
+            if confirmation:
+                confirmed_changes[original_file] = self.changes[original_file]
+
+        # Implement confirmed suggestions
+        for file_to_move, target_folder in confirmed_changes.items():
+            source_path = os.path.join(source_folder, file_to_move)
+            destination_path = os.path.join(destination_folder, target_folder)
+            
+            # Move the file
+            result = FileOperator.MoveFile(source_path, destination_path)
+            if result != 210000:
+                print(f"Failed to move '{file_to_move}' to '{target_folder}'. Error code: {result}")
+
+        messagebox.showinfo("Success", "Sorting completed successfully.")
+        self.on_task_sort_files = False
+
+    def _move_to_folder_thread(self, file, option_folder, local_changes):
+        """Helper method to run in a separate thread."""
+        suggestion = self.counsellor.MoveToFolder(file, option_folder)
+        if suggestion:
+            local_changes[file] = suggestion

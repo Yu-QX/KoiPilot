@@ -138,9 +138,7 @@ class KOIMenu(tk.Toplevel):
     
     def button_relocate_files(self):
         """Choose files to relocate to different folders using AI"""
-        # TODO: Implement relocate files mode
-    
+        threading.Thread(target=self.function_manager.SortFiles).start()    
     def button_format_filenames(self):
         """Format filenames in a folder using AI"""
-        # Run self.function_manager.FormatName on another thread, so the GUI doesn't freeze
         threading.Thread(target=self.function_manager.FormatName).start()
