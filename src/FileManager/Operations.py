@@ -1,6 +1,8 @@
 import os
 import shutil
 
+# TODO: Log changes
+
 class FileOperator:
     """Methods for operating with files."""
     @staticmethod
@@ -112,3 +114,53 @@ class FolderOperator:
         new_path = os.path.join(destination_folder, os.path.basename(folder_path))
         os.rename(folder_path, new_path)
         return 210000  # Success
+    
+    @staticmethod
+    def GetSubFolders(folder_path: str, full_path: bool = False) -> list[str]:
+        """
+        Get all sub folders in a folder
+
+        :param folder_path: The path of the folder
+        :param full_path: Whether to return the full path or just the folder name
+        :return: A list of sub folders or an error code
+        """
+        if not os.path.exists(folder_path):
+            print("Error Code: 210114")  # Destination Folder Not Found
+            return []
+        if not os.path.isdir(folder_path):
+            print("Error Code: 210122")  # Folder Operation Error
+            return []
+        
+        if full_path:
+            result = [entry.path for entry in os.scandir(folder_path) if entry.is_dir()]
+        else:
+            result = [entry.name for entry in os.scandir(folder_path) if entry.is_dir()]
+
+        return result
+
+    @staticmethod
+    def GetFiles(folder_path: str, full_path: bool = False) -> list[str]:
+        """
+        Get all files in a folder
+
+        :param folder_path: The path of the folder
+        :param full_path: Whether to return the full path or just the file name
+        :return: A list of files or an error code
+        """
+        if not os.path.exists(folder_path):
+            print("Error Code: 210114")  # Destination Folder Not Found
+            return []
+        if not os.path.isdir(folder_path):
+            print("Error Code: 210122")  # Folder Operation Error # TODO: add a new code
+            return []
+
+        if full_path:
+            result = [entry.path for entry in os.scandir(folder_path) if entry.is_file()]
+        else:
+            result = [entry.name for entry in os.scandir(folder_path) if entry.is_file()]
+        
+        return result
+
+class Guard:
+    """Prevent illegal operations"""
+    # TODO: implement this

@@ -1,10 +1,11 @@
 import os, sys
-from typing import Optional
-if __name__ == "__main__":
-    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import difflib
+from typing import Optional
 from Listeners import Listener
+
+APP_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if APP_PATH not in sys.path:
+    sys.path.append(APP_PATH)
 
 # TODO: relocate this to `Messages`
 def generate_prompt_move(file, folder_options, available_info: Optional[dict] = None) -> tuple[str, dict]:
@@ -40,6 +41,8 @@ def find_closest_match(string: str, options: list[str]) -> Optional[str]:
     Returns:
     Optional[str]: The most similar option, or None if no sufficiently similar option is found.
     """
+    if not options or not string:
+        return None                                                                              
     
     # Normalize options and input string to lowercase for case-insensitive matching
     normalized_options = [name.lower() for name in options]
