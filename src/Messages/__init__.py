@@ -153,7 +153,10 @@ class MessageManager:
                 raw_message = raw_message.replace("{" + arg_id + "}", str(args_dict[arg_id]))
             result += raw_message + join_with
 
-        return result.strip()
+        # Remove the last join_with, and return the result
+        if result and join_with:
+            result = result.rstrip(join_with).strip()
+        return result
 
     def SystemCode(self, code: int | str) -> str:
         """
