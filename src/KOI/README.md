@@ -34,6 +34,6 @@ The construction of the *KoiPilot* app is as follows:
 
 **Support modules include:**
 - `Listeners`: A module that holds all the AI APIs.
-- `Massages`: A module that holds all the messages used in the app.
+- `Messages`: A module that holds all the messages used in the app.
 
 For more details, please refer to the corresponding module documentation in `README.md` of each module.

@@ -1,5 +1,5 @@
 import os
-import json
+import json, re
 
 class MessageManager:
     """Handles all the messages."""
@@ -8,6 +8,7 @@ class MessageManager:
         self.LanguagePriorities = ["EN", "CN"]
 
         # System configurations
+        self.accepted_file_suffixs = (".md", ".txt")
         self.base_path = os.path.dirname(os.path.abspath(__file__))
         self.messages_path = os.path.join(self.base_path, "MessageCenter")
         self.system_code_path = os.path.join(self.base_path, "SystemCodeCenter")
@@ -31,29 +32,31 @@ class MessageManager:
         """
         matched_lang = None
         message = ""  # Initialize message to prevent unbound variable error
-        if isinstance(message_id, (list, tuple)):
+        if not message_id:
+            return ""
+        elif isinstance(message_id, (list, tuple)):
             message_path = os.path.join(self.messages_path, *message_id)
         else:
             message_path = os.path.join(self.messages_path, message_id)
 
         # if message_path is a folder, list the files in the folder and check for priority language
         if os.path.isdir(message_path):
-            files = os.listdir(message_path)
+            # Load and filter out not accepted file suffix
+            all_files = os.listdir(message_path)
+            files = [file for file in all_files if file.endswith(self.accepted_file_suffixs)]
             if not files:
                 return ""
+
             for lang in self.LanguagePriorities:
-                if lang + ".md" in files:
-                    message_path = os.path.join(message_path, lang + ".md")
-                    matched_lang = lang
-                    break
-                if lang + ".txt" in files:
-                    message_path = os.path.join(message_path, lang + ".txt")
-                    matched_lang = lang
-                    break
+                for suffix in self.accepted_file_suffixs:
+                    if lang + suffix in files:
+                        message_path = os.path.join(message_path, lang + suffix)
+                        matched_lang = lang
+                        break
             if not matched_lang:
                 # choose the first file in the folder
                 message_path = os.path.join(message_path, files[0])
-                matched_lang = files[0].split(".")[-1]
+                matched_lang = files[0].split(".")[0]
             with open(message_path, "r", encoding="utf-8") as f:
                 message = f.read()
 
@@ -80,16 +83,78 @@ class MessageManager:
             message = ""
         return message
 
-    def Construct(self, message_id: list[str] | tuple[str] | str, *args) -> str:
+    def Construct(self, template_id: list[str] | tuple[str] | str, join_with: str = "\n", *args) -> str:
         """
         Constructs a message by replacing placeholders with arguments.
         
-        :param message_id: The message ID to retrieve. It is a list or tuple of strings indicating the indexes of the message.
+        :param template_id: The template ID to retrieve. It is a list or tuple of strings indicating the indexes of the template to use.
+        :param join_with: The string to join the blocks with.
         :param args: The arguments to replace placeholders in the message.
         :return: The constructed message.
         """
-        return ""
-    
+        # Load template from template_id
+        try:
+            if not template_id:
+                return ""
+            elif isinstance(template_id, str):
+                # Sanitize template_id to prevent path traversal
+                if not template_id.endswith(".json"):
+                    template_id += ".json"
+                # Ensure safe path construction
+                template_id = os.path.normpath(template_id).lstrip(os.path.pardir + os.sep)
+                template_path = os.path.join(self.messages_path, template_id)
+            else:
+                # Convert tuple to list to allow modification
+                template_id = list(template_id)
+                if not template_id[-1].endswith(".json"):
+                    template_id[-1] += ".json"
+                # Sanitize each component to prevent path traversal
+                template_id = [os.path.normpath(p).lstrip(os.path.pardir + os.sep) for p in template_id]
+                template_path = os.path.join(self.messages_path, *template_id)
+            with open(template_path, "r") as f:
+                template = json.load(f)
+        except FileNotFoundError:
+            print(f"[ERROR] Template file {template_id} not found.")
+            return ""
+        except json.JSONDecodeError:
+            print(f"[ERROR] Template file {template_id} is not a valid JSON file.")
+            return ""
+        
+        # Start parsing the template
+        result = ""
+        for block_id, block in template.items():
+            # Ignore bad blocks
+            if not isinstance(block, dict):
+                continue
+
+            # Use key: `message_id`, `message`
+            raw_message = ""
+            message_id = block.get("message_id")
+            if isinstance(message_id, (list, tuple, str)):
+                raw_message = self.GetMessage(message_id=message_id)
+            if not raw_message:
+                raw_message = block.get("message")
+            if not isinstance(raw_message, str):
+                continue
+            
+            # Check whether need formatting
+            if block.get("dont_format", False):
+                result += raw_message + join_with
+                continue
+            
+            # Start formatting
+            args_dict = {arg_id: arg for arg_id, arg in enumerate(args)}
+            # check args needed in the message
+            args_needed = re.findall(r"\\{(\\d+)\\}", raw_message)
+            # Check if all required arguments are present. If not, discard the block
+            if not all(arg_id in args_dict for arg_id in args_needed):
+                continue
+            for arg_id in args_needed:
+                raw_message = raw_message.replace("{" + arg_id + "}", str(args_dict[arg_id]))
+            result += raw_message + join_with
+
+        return result.strip()
+
     def SystemCode(self, code: int | str) -> str:
         """
         Returns the description of the given system code.
@@ -97,8 +162,7 @@ class MessageManager:
         :param code: The system code to retrieve the description for.
         :return: The description of the given system code.
         """
-        message = "Unknown System Code"
-        code = str(code)
-        if code in self.system_codes:
-            message = self.system_codes[code]
-        return message
+        try:
+            return self.system_codes.get(str(code), "Unknown System Code")
+        except Exception:
+            return "Unknown System Code"
