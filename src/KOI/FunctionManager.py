@@ -252,3 +252,7 @@ class FunctionManager:
         suggestion = self.counsellor.MoveToFolder(file, option_folder)
         if suggestion:
             local_changes[file] = suggestion
+
+    def Chat(self):
+        """Chat with the AI."""
+        
