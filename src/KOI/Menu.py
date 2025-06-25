@@ -8,7 +8,7 @@ from .Styling import Styling
 # - `CamelCase` for variables and functions to export and `snake_case` for internal use 
 
 class KOIMenu(tk.Toplevel):
-    def __init__(self, master):
+    def __init__(self, master: tk.Tk):
         super().__init__(master)
         
         # Configure window
@@ -33,8 +33,8 @@ class KOIMenu(tk.Toplevel):
         # Define button list and create buttons
         self.buttons = []
         self.button_list = {
-            "Sort Files": self.button_relocate_files,
-            "Format Names": self.button_format_filenames,
+            "Sort Files": self.button_sort_files,
+            "Format Names": self.button_format_names,
             "Chat": self.button_chat,
         }  # TODO: Import `Messages` module
         for text, action in self.button_list.items():
@@ -53,10 +53,10 @@ class KOIMenu(tk.Toplevel):
             
             self.buttons.append(btn)
         self.layout_buttons()
+        self.function_manager = FunctionManager(self.master)
 
         # Hide menu initially
         self.withdraw()
-        self.function_manager = FunctionManager()
 
     def layout_buttons(self):
         # Dynamically adjust width and height based on button count
@@ -84,16 +84,14 @@ class KOIMenu(tk.Toplevel):
         """Show the menu with a fade-in effect"""
         if self.menu_visible or getattr(self.master, 'on_drag', False):
             return
-        self.menu_visible = True
 
         # Calculate position (centered relative to main window)
-        master = self.master
-        master.update_idletasks()  # Ensure we have current geometry values
+        self.master.update_idletasks()  # Ensure we have current geometry values
 
         # Get master window properties
-        master_x = master.winfo_x()
-        master_y = master.winfo_y()
-        master_width = master.winfo_width()
+        master_x = self.master.winfo_x()
+        master_y = self.master.winfo_y()
+        master_width = self.master.winfo_width()
         center_x = int(master_x + (master_width / 2))
         center_y = int(master_y)
 
@@ -116,12 +114,12 @@ class KOIMenu(tk.Toplevel):
         step_delay = self.duration_fade // steps
         for i in range(1, steps + 1):
             self.after(i * step_delay, lambda a=i / steps: self.attributes("-alpha", a))
+        self.menu_visible = True
 
     def Hide(self, event: Optional[tk.Event] = None):
         """Hide the menu with a fade-out effect"""
         if not self.menu_visible:
             return
-        self.menu_visible = False
         
         # Gradually decrease alpha using duration_fade
         steps = 10
@@ -131,14 +129,16 @@ class KOIMenu(tk.Toplevel):
 
         # After fading out, withdraw the window
         self.after(self.duration_fade, self.withdraw)
+        self.menu_visible = False
     
     def button_chat(self):
         """Activate chat mode"""
         # TODO: Implement chat mode
-    
-    def button_relocate_files(self):
+
+    def button_sort_files(self):
         """Choose files to relocate to different folders using AI"""
-        threading.Thread(target=self.function_manager.SortFiles).start()    
-    def button_format_filenames(self):
+        threading.Thread(target=self.function_manager.SortFiles).start()
+
+    def button_format_names(self):
         """Format filenames in a folder using AI"""
-        threading.Thread(target=self.function_manager.FormatName).start()
+        threading.Thread(target=self.function_manager.FormatNames).start()

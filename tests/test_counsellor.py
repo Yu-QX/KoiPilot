@@ -39,6 +39,6 @@ name_list = name_list = [
 ]
 
 counsellor = Counsellor(model="qwen3:latest")
-changes = counsellor.FormatName(name_list)
+changes = counsellor.FormatFileNames(name_list)
 [print(f"{original_name} -> {changed_name}") for original_name, changed_name in changes.items()]
-#assert changes == expected_changes, "Test failed for FormatName"
+#assert changes == expected_changes, "Test failed for FormatFileNames"

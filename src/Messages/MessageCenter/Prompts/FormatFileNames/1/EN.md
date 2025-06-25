@@ -37,14 +37,3 @@ When evaluating the current names, consider the following best practices for nam
 For your output:
 - Return a JSON object where each key is an original name from the list
 - Each value is the suggested reformatted name
-
-Example Output:
-```json
-{{
-  "report 06-16.docx": "06-16_report.docx",
-  "Final_Version_ProjectPlan0614.xlsx": "06-14_project-plan_v1.xlsx"
-}}
-```
-
-Please review the following list of file or folder names and suggest a standardized, consistent format for each:
-{name_list}

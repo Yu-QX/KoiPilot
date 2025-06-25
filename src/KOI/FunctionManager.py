@@ -14,7 +14,7 @@ if APP_PATH not in sys.path:
 
 class FunctionManager:
     """Handles all the functions for KOI to call."""
-    def __init__(self):
+    def __init__(self, master):
         # TODO: Auto load from config file
         model: Optional[str] = "qwen3:0.6B" # change it to your model
         api_type: str = "ollama"
@@ -23,9 +23,10 @@ class FunctionManager:
         api_key: Optional[str] = None
         version: Optional[str] = None
         
-        self.on_task_format_name = False
+        self.on_task_format_names = False
         self.on_task_sort_files = False
 
+        self.master = master
         self.counsellor = Counsellor(model, api_type, host, port, api_key, version)
         self.listener = Listener(api_type, host, port, api_key, version)
     
@@ -41,17 +42,17 @@ class FunctionManager:
         confirmations: list[Optional[bool]] = [None for _ in changes]
         
         # Set up GUI
-        root = tk.Tk()
-        root.title("Confirm Changes")
-        root.attributes('-topmost', True)
-        root.configure(bg='black')
-        #root.wm_attributes("-transparentcolor", "black")
+        dialog = tk.Toplevel(self.master)
+        dialog.title("Confirm Changes")
+        dialog.attributes('-topmost', True)
+        dialog.configure(bg='black')
+        #dialog.wm_attributes("-transparentcolor", "black")
 
         color_bg = Styling.color_background
 
-        confirm_window = tk.Canvas(root, bg="black", highlightthickness=0)
+        confirm_window = tk.Canvas(dialog, bg="black", highlightthickness=0)
         confirm_window.pack(fill=tk.BOTH, expand=True)
-        root.withdraw()
+        dialog.withdraw()
 
         # Create buttons
         line_list = []
@@ -72,13 +73,13 @@ class FunctionManager:
                 confirmations[idx] = True
                 line_list[idx].destroy()
                 if not None in confirmations:
-                    root.quit()
+                    dialog.destroy()
 
             def cancel_command(idx):
                 confirmations[idx] = False
                 line_list[idx].destroy()
                 if not None in confirmations:
-                    root.quit()
+                    dialog.destroy()
 
             confirm_button = tk.Button(line_list[idx], text="Confirm", bg="green", fg="white", font=Styling.font_family, command=lambda i=idx: confirm_command(i))
             confirm_button.pack(side=tk.RIGHT, padx=5)
@@ -93,45 +94,45 @@ class FunctionManager:
             for idx in range(len(confirmations)):
                 if confirmations[idx] is None:
                     confirmations[idx] = True  # type: ignore
-            root.quit()
+            dialog.destroy()
 
         def cancel_all():
             for idx in range(len(confirmations)):
                 if confirmations[idx] is None:
                     confirmations[idx] = False  # type: ignore
-            root.quit()
+            dialog.destroy()
 
         confirm_all_button = tk.Button(button_frame, text="Confirm All", bg="green", fg="white", font=Styling.font_family, command=confirm_all)
         confirm_all_button.pack(side=tk.LEFT, padx=5)
         cancel_all_button = tk.Button(button_frame, text="Cancel All", bg="red", fg="white", font=Styling.font_family, command=cancel_all)
         cancel_all_button.pack(side=tk.RIGHT, padx=5)
 
-        # Start the main loop
-        root.deiconify()
-        root.mainloop()
+        # Start
+        dialog.deiconify()
+        self.master.withdraw()
+        self.master.wait_window(dialog)
+        self.master.deiconify()
 
-        # Remove root and recycle memory
-        root.destroy()
-        del root
+        # Remove dialog and recycle memory
+        dialog.destroy()
+        del dialog
         gc.collect()
         
         # Filter out None values before returning
         return [value if value is not None else False for value in confirmations]
 
-    def FormatName(self):
+    def FormatNames(self):
         """Format the names of files and folders in selected folder."""
-        if self.on_task_format_name:
+        if self.on_task_format_names:
             messagebox.showwarning("Warning", "A task is already running.")
             return
-        self.on_task_format_name = True
+        self.on_task_format_names = True
 
         # Get the selected folder with UI interaction
-        root = tk.Tk()
-        root.withdraw()  # Hide the main window
         selected_folder = filedialog.askdirectory(title="Select Folder to Format Names")  # TODO: Message
         if not selected_folder:
             messagebox.showinfo("No Folder Selected", "You did not select a folder.")
-            self.on_task_format_name = False
+            self.on_task_format_names = False
             return  # Exit if no folder is selected
 
         # Get the names of files and folders in the selected folder
@@ -140,17 +141,17 @@ class FunctionManager:
 
         # Generate suggestions, and save the suggestions in local variable
         if len(files) >= 3:
-            file_changes = self.counsellor.FormatName(files)
+            file_changes = self.counsellor.FormatFileNames(files)
         else:
             file_changes = {}
         if len(folders) >= 3:
-            folder_changes = self.counsellor.FormatName(folders)
+            folder_changes = self.counsellor.FormatFileNames(folders)
         else:
             folder_changes = {}
         self.changes = {**file_changes, **folder_changes}
         if not self.changes:
             messagebox.showinfo("No Changes", "No renaming suggestions were generated.")
-            self.on_task_format_name = False
+            self.on_task_format_names = False
             return
 
         # Get user confirmation with UI interaction
@@ -159,7 +160,7 @@ class FunctionManager:
         confirmed_changes = {}
         if len(confirm) != len(original_names):
             print("Error: Confirmation length does not match original names length.")
-            self.on_task_format_name = False
+            self.on_task_format_names = False
             return
         for original_name, confirmation in zip(original_names, confirm):
             if confirmation:
@@ -179,7 +180,7 @@ class FunctionManager:
                 print(f"Failed to rename '{original_name}' to '{suggested_name}'. Error code: {result}")
 
         messagebox.showinfo("Success", "Renaming completed successfully.")
-        self.on_task_format_name = False
+        self.on_task_format_names = False
         return
     
     def SortFiles(self):
@@ -190,8 +191,6 @@ class FunctionManager:
         self.on_task_sort_files = True
 
         # Get the folder containing all the files to be sorted with UI interaction
-        root = tk.Tk()
-        root.withdraw()
         source_folder = filedialog.askdirectory(title="Select Folder to Sort")
         if not source_folder:
             messagebox.showinfo("No Folder Selected", "You did not select a folder.")
@@ -221,6 +220,11 @@ class FunctionManager:
         for thread in threads:
             thread.join()
         self.changes.update(local_changes)
+
+        if not self.changes:
+            messagebox.showinfo("No Changes", "No moving suggestions were generated.")
+            self.on_task_sort_files = False
+            return
 
         # Get user confirmation with UI interaction
         confirm = self.confirmation_dialog()
@@ -252,3 +256,8 @@ class FunctionManager:
         suggestion = self.counsellor.MoveToFolder(file, option_folder)
         if suggestion:
             local_changes[file] = suggestion
+        return
+
+    def Chat(self):
+        """Chat with the AI."""
+        
