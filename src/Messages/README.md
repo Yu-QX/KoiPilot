@@ -41,17 +41,17 @@ Example template `JSON`:
 {
     "block 1": {
         "message_id": "a/b/c",  // Use ID for message (recommended method)
-        "required_args": [
-            "arg1",
-            "arg2"
-        ]  // This block will be used only if all required arguments are provided (optional)
-    },
+    },  // The block will be used only if all required arguments are provided.
     "block 2": {
         "message": "Hello, {name}!"  // When `message_id` and `message` are both provided, `message` will be ignored.
-    },  // blocks are lined up in order
+    },  // blocks are lined up in order.
     "block 3": {
         "message_id": "a/b/d",
         "dont_format": True  // Don't format the message. Use it if there is `{}` enclosing unexpected stuff in the message.
-    }  // new line will be automaticly added between blocks
+    },  // New line will be automaticly added between blocks. You can also specify with `join_with`.
+    "RESPONSE_FORMAT": {
+        "result": "folder",
+        "reason": "reason"
+    }  // Capitals are reserved for special functions. `RESPONSE_FORMAT` indicates the AI response format.
 }
 ```

@@ -83,14 +83,14 @@ class MessageManager:
             message = ""
         return message
 
-    def Construct(self, template_id: list[str] | tuple[str] | str, join_with: str = "\n", *args) -> str:
+    def Construct(self, template_id: list[str] | tuple[str] | str, join_with: str = "\n", *args) -> str | tuple[str, dict]:
         """
         Constructs a message by replacing placeholders with arguments.
         
         :param template_id: The template ID to retrieve. It is a list or tuple of strings indicating the indexes of the template to use.
         :param join_with: The string to join the blocks with.
         :param args: The arguments to replace placeholders in the message.
-        :return: The constructed message.
+        :return: The constructed message, and the result format if any.
         """
         # Load template from template_id
         try:
@@ -122,10 +122,15 @@ class MessageManager:
         
         # Start parsing the template
         result = ""
+        result_format = {}
         for block_id, block in template.items():
             # Ignore bad blocks
             if not isinstance(block, dict):
                 continue
+
+            # Check for special cases
+            if block_id == "RESPONSE_FORMAT":
+                result_format.update(block)
 
             # Use key: `message_id`, `message`
             raw_message = ""
@@ -156,7 +161,11 @@ class MessageManager:
         # Remove the last join_with, and return the result
         if result and join_with:
             result = result.rstrip(join_with).strip()
-        return result
+
+        if result_format:
+            return result, result_format
+        else:
+            return result
 
     def SystemCode(self, code: int | str) -> str:
         """
