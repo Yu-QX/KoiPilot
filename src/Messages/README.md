@@ -52,7 +52,7 @@ Example template `JSON`:
     },  // blocks are lined up in order.
     "block 3": {
         "message_id": "a/b/d",
-        "dont_format": True  // Don't format the message. Use it if there is `{}` enclosing unexpected stuff in the message.
+        "dont_format": true  // Don't format the message. Use it if there is `{}` enclosing unexpected stuff in the message.
     },  // New line will be automaticly added between blocks. You can also specify with `join_with`.
     "RESPONSE_FORMAT": {
         "result": "folder",

@@ -1,12 +1,13 @@
 {
     "1_introduction": {
-        "message_id": ""
+        "message_id": "Prompts/FileToFolder/1",
+        "dont_format": true
     },
     "2_example": {
         "message_id": ""
     },
     "3_additional_info": {
-        "message_id": ""
+        "message_id": "Prompts/FileToFolder/3"
     },
     "RESPONSE_FORMAT": {
         "result": "folder",

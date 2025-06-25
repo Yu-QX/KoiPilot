@@ -23,7 +23,7 @@ class FunctionManager:
         api_key: Optional[str] = None
         version: Optional[str] = None
         
-        self.on_task_format_name = False
+        self.on_task_format_names = False
         self.on_task_sort_files = False
 
         self.counsellor = Counsellor(model, api_type, host, port, api_key, version)
@@ -120,18 +120,16 @@ class FunctionManager:
 
     def FormatNames(self):
         """Format the names of files and folders in selected folder."""
-        if self.on_task_format_name:
+        if self.on_task_format_names:
             messagebox.showwarning("Warning", "A task is already running.")
             return
-        self.on_task_format_name = True
+        self.on_task_format_names = True
 
         # Get the selected folder with UI interaction
-        root = tk.Tk()
-        root.withdraw()  # Hide the main window
         selected_folder = filedialog.askdirectory(title="Select Folder to Format Names")  # TODO: Message
         if not selected_folder:
             messagebox.showinfo("No Folder Selected", "You did not select a folder.")
-            self.on_task_format_name = False
+            self.on_task_format_names = False
             return  # Exit if no folder is selected
 
         # Get the names of files and folders in the selected folder
@@ -150,7 +148,7 @@ class FunctionManager:
         self.changes = {**file_changes, **folder_changes}
         if not self.changes:
             messagebox.showinfo("No Changes", "No renaming suggestions were generated.")
-            self.on_task_format_name = False
+            self.on_task_format_names = False
             return
 
         # Get user confirmation with UI interaction
@@ -159,7 +157,7 @@ class FunctionManager:
         confirmed_changes = {}
         if len(confirm) != len(original_names):
             print("Error: Confirmation length does not match original names length.")
-            self.on_task_format_name = False
+            self.on_task_format_names = False
             return
         for original_name, confirmation in zip(original_names, confirm):
             if confirmation:
@@ -179,7 +177,7 @@ class FunctionManager:
                 print(f"Failed to rename '{original_name}' to '{suggested_name}'. Error code: {result}")
 
         messagebox.showinfo("Success", "Renaming completed successfully.")
-        self.on_task_format_name = False
+        self.on_task_format_names = False
         return
     
     def SortFiles(self):
@@ -190,8 +188,6 @@ class FunctionManager:
         self.on_task_sort_files = True
 
         # Get the folder containing all the files to be sorted with UI interaction
-        root = tk.Tk()
-        root.withdraw()
         source_folder = filedialog.askdirectory(title="Select Folder to Sort")
         if not source_folder:
             messagebox.showinfo("No Folder Selected", "You did not select a folder.")
@@ -221,6 +217,11 @@ class FunctionManager:
         for thread in threads:
             thread.join()
         self.changes.update(local_changes)
+
+        if not self.changes:
+            messagebox.showinfo("No Changes", "No moving suggestions were generated.")
+            self.on_task_sort_files = False
+            return
 
         # Get user confirmation with UI interaction
         confirm = self.confirmation_dialog()
@@ -252,6 +253,7 @@ class FunctionManager:
         suggestion = self.counsellor.MoveToFolder(file, option_folder)
         if suggestion:
             local_changes[file] = suggestion
+        return
 
     def Chat(self):
         """Chat with the AI."""

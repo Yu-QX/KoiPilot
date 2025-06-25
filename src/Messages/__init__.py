@@ -31,12 +31,15 @@ class MessageManager:
         :return: The message corresponding to the given message ID.
         """
         matched_lang = None
-        message = ""  # Initialize message to prevent unbound variable error
+        message = ""
         if not message_id:
             return ""
         elif isinstance(message_id, (list, tuple)):
+            # Sanitize each component to prevent path traversal
+            message_id = [os.path.normpath(p).lstrip(os.path.pardir + os.sep) for p in message_id]
             message_path = os.path.join(self.messages_path, *message_id)
         else:
+            message_id = os.path.normpath(message_id).lstrip(os.path.pardir + os.sep)
             message_path = os.path.join(self.messages_path, message_id)
 
         # if message_path is a folder, list the files in the folder and check for priority language
@@ -83,7 +86,7 @@ class MessageManager:
             message = ""
         return message
 
-    def Construct(self, template_id: list[str] | tuple[str] | str, join_with: str = "\n", **kwargs) -> str | tuple[str, dict]:
+    def Construct(self, template_id: list[str] | tuple[str] | str, join_with: str = "\n\n", **kwargs) -> str | tuple[str, dict]:
         """
         Constructs a message by replacing placeholders with arguments.
         
