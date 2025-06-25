@@ -83,7 +83,7 @@ class MessageManager:
             message = ""
         return message
 
-    def Construct(self, template_id: list[str] | tuple[str] | str, join_with: str = "\n", *args) -> str | tuple[str, dict]:
+    def Construct(self, template_id: list[str] | tuple[str] | str, join_with: str = "\n", **kwargs) -> str | tuple[str, dict]:
         """
         Constructs a message by replacing placeholders with arguments.
         
@@ -148,14 +148,13 @@ class MessageManager:
                 continue
             
             # Start formatting
-            args_dict = {arg_id: arg for arg_id, arg in enumerate(args)}
+            args_dict = kwargs
             # check args needed in the message
             args_needed = re.findall(r"\\{(\\d+)\\}", raw_message)
             # Check if all required arguments are present. If not, discard the block
             if not all(arg_id in args_dict for arg_id in args_needed):
                 continue
-            for arg_id in args_needed:
-                raw_message = raw_message.replace("{" + arg_id + "}", str(args_dict[arg_id]))
+            raw_message = raw_message.format(**args_dict)
             result += raw_message + join_with
 
         # Remove the last join_with, and return the result

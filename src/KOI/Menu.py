@@ -33,8 +33,8 @@ class KOIMenu(tk.Toplevel):
         # Define button list and create buttons
         self.buttons = []
         self.button_list = {
-            "Sort Files": self.button_relocate_files,
-            "Format Names": self.button_format_filenames,
+            "Sort Files": self.button_sort_files,
+            "Format Names": self.button_format_names,
             "Chat": self.button_chat,
         }  # TODO: Import `Messages` module
         for text, action in self.button_list.items():
@@ -136,9 +136,9 @@ class KOIMenu(tk.Toplevel):
         """Activate chat mode"""
         # TODO: Implement chat mode
     
-    def button_relocate_files(self):
+    def button_sort_files(self):
         """Choose files to relocate to different folders using AI"""
         threading.Thread(target=self.function_manager.SortFiles).start()    
-    def button_format_filenames(self):
+    def button_format_names(self):
         """Format filenames in a folder using AI"""
-        threading.Thread(target=self.function_manager.FormatName).start()
+        threading.Thread(target=self.function_manager.FormatNames).start()

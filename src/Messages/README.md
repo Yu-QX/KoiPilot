@@ -43,7 +43,12 @@ Example template `JSON`:
         "message_id": "a/b/c",  // Use ID for message (recommended method)
     },  // The block will be used only if all required arguments are provided.
     "block 2": {
-        "message": "Hello, {name}!"  // When `message_id` and `message` are both provided, `message` will be ignored.
+        "message": "Hello, {name}!",  // When `message_id` and `message` are both provided, `message` will be ignored.
+        "case": [
+            "requirement 1",
+            "requirement 2",  // When passing in a string, check arguments and convert to boolean.
+            {"requirement 3": "value"}  // When passing in a dict, check if the arguments match.
+        ]  // The block will be used only if all requirements are met. Can also used a single string or dictionary. (Optional)
     },  // blocks are lined up in order.
     "block 3": {
         "message_id": "a/b/d",

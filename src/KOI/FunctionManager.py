@@ -118,7 +118,7 @@ class FunctionManager:
         # Filter out None values before returning
         return [value if value is not None else False for value in confirmations]
 
-    def FormatName(self):
+    def FormatNames(self):
         """Format the names of files and folders in selected folder."""
         if self.on_task_format_name:
             messagebox.showwarning("Warning", "A task is already running.")
@@ -140,11 +140,11 @@ class FunctionManager:
 
         # Generate suggestions, and save the suggestions in local variable
         if len(files) >= 3:
-            file_changes = self.counsellor.FormatName(files)
+            file_changes = self.counsellor.FormatFileNames(files)
         else:
             file_changes = {}
         if len(folders) >= 3:
-            folder_changes = self.counsellor.FormatName(folders)
+            folder_changes = self.counsellor.FormatFileNames(folders)
         else:
             folder_changes = {}
         self.changes = {**file_changes, **folder_changes}

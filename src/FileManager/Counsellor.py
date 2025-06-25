@@ -1,29 +1,13 @@
 import os, sys
 import difflib
 from typing import Optional
-from Listeners import Listener
 
 APP_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if APP_PATH not in sys.path:
     sys.path.append(APP_PATH)
 
-# TODO: relocate this to `Messages`
-def generate_prompt_move(file, folder_options, available_info: Optional[dict] = None) -> tuple[str, dict]:
-    with open("src/FileManager/prompts/FileToFolder.md", "r") as f:
-        prompt_FileToFolder = f.read()
-    formatted_folders = "\n".join(f"- {folder}" for folder in folder_options)
-    
-    prompt = prompt_FileToFolder.format(file=file, folder_options=formatted_folders).strip()
-    return prompt, {"result": "folder", "reason": "reason"}
-
-# TODO: relocate this to `Messages`
-def generate_prompt_name(name_list: list):
-    with open("src/FileManager/prompts/FileName.md", "r") as f:
-        prompt_Name = f.read()
-    formatted_names = "\n".join(f"- {name}" for name in name_list)
-    
-    prompt = prompt_Name.format(name_list=formatted_names).strip()
-    return prompt
+from Listeners import Listener
+from Messages import MessageManager
 
 def find_closest_match(string: str, options: list[str]) -> Optional[str]:
     """
@@ -65,6 +49,7 @@ class Counsellor:
     """AI suggestions for file operations"""
     def __init__(self, model: Optional[str] = None, api_type: str = "ollama", host: str = "localhost", port: Optional[int] = None, api_key: Optional[str] = None, version: Optional[str] = None):
         self.listener = Listener(api_type, host, port, api_key, version)
+        self.messages = MessageManager()
         self.model = model
 
     def MoveToFolder(self, source: str, folder_options: list[str]) -> Optional[str]:
@@ -76,8 +61,17 @@ class Counsellor:
         :return: A string for the suggested folder.
         """
         # Gather available information & generate prompt
-        available_info = {}                                                                     # TODO: add functions to `Operations` to enable this
-        prompt, result_struct = generate_prompt_move(source, folder_options, available_info)    # TODO: Change name when `Messages` completed
+        available_info = {}   # TODO: add functions to `Operations` to enable this
+        available_info["file"] = source
+        available_info["folder_options"] = folder_options
+        prompt, result_struct = self.messages.Construct(template_id="Prompts/FileToFolder", **available_info)
+        if not prompt or not isinstance(prompt, str):
+            return None
+        if not result_struct or not isinstance(result_struct, dict):
+            result_struct = {
+                "result": "folder",
+                "reason": "reason"
+            }  # Use default values if no result_struct is provided
 
         # Generate the suggestion
         suggestion = self.listener.GenerateJson(prompt=prompt, model=self.model, seed=42)
@@ -93,7 +87,7 @@ class Counsellor:
                 
         return result
     
-    def FormatName(self, name_list: list[str]) -> dict:
+    def FormatFileNames(self, name_list: list[str]) -> dict:
         """
         Suggest renamings for the given list of file or folder names to make them similar in format.
     
@@ -101,7 +95,9 @@ class Counsellor:
         :return: A dictionary containing the original names and their suggested new names.
         """
         # Generate prompt
-        prompt = generate_prompt_name(name_list)
+        prompt = self.messages.Construct(template_id="Prompts/FormatFileName", name_list=name_list)
+        if not prompt or not isinstance(prompt, str):
+            return {}
     
         # Generate response
         response = self.listener.GenerateJson(prompt, seed=42)
