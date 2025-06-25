@@ -43,8 +43,6 @@ def find_closest_match(string: str, options: list[str]) -> Optional[str]:
     
     return result
 
-
-
 class Counsellor:
     """AI suggestions for file operations"""
     def __init__(self, model: Optional[str] = None, api_type: str = "ollama", host: str = "localhost", port: Optional[int] = None, api_key: Optional[str] = None, version: Optional[str] = None):
