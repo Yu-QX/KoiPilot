@@ -14,7 +14,7 @@ if APP_PATH not in sys.path:
 
 class FunctionManager:
     """Handles all the functions for KOI to call."""
-    def __init__(self):
+    def __init__(self, master):
         # TODO: Auto load from config file
         model: Optional[str] = "qwen3:0.6B" # change it to your model
         api_type: str = "ollama"
@@ -26,6 +26,7 @@ class FunctionManager:
         self.on_task_format_names = False
         self.on_task_sort_files = False
 
+        self.master = master
         self.counsellor = Counsellor(model, api_type, host, port, api_key, version)
         self.listener = Listener(api_type, host, port, api_key, version)
     
@@ -41,17 +42,17 @@ class FunctionManager:
         confirmations: list[Optional[bool]] = [None for _ in changes]
         
         # Set up GUI
-        root = tk.Tk()
-        root.title("Confirm Changes")
-        root.attributes('-topmost', True)
-        root.configure(bg='black')
-        #root.wm_attributes("-transparentcolor", "black")
+        dialog = tk.Toplevel(self.master)
+        dialog.title("Confirm Changes")
+        dialog.attributes('-topmost', True)
+        dialog.configure(bg='black')
+        #dialog.wm_attributes("-transparentcolor", "black")
 
         color_bg = Styling.color_background
 
-        confirm_window = tk.Canvas(root, bg="black", highlightthickness=0)
+        confirm_window = tk.Canvas(dialog, bg="black", highlightthickness=0)
         confirm_window.pack(fill=tk.BOTH, expand=True)
-        root.withdraw()
+        dialog.withdraw()
 
         # Create buttons
         line_list = []
@@ -72,13 +73,13 @@ class FunctionManager:
                 confirmations[idx] = True
                 line_list[idx].destroy()
                 if not None in confirmations:
-                    root.quit()
+                    dialog.destroy()
 
             def cancel_command(idx):
                 confirmations[idx] = False
                 line_list[idx].destroy()
                 if not None in confirmations:
-                    root.quit()
+                    dialog.destroy()
 
             confirm_button = tk.Button(line_list[idx], text="Confirm", bg="green", fg="white", font=Styling.font_family, command=lambda i=idx: confirm_command(i))
             confirm_button.pack(side=tk.RIGHT, padx=5)
@@ -93,26 +94,28 @@ class FunctionManager:
             for idx in range(len(confirmations)):
                 if confirmations[idx] is None:
                     confirmations[idx] = True  # type: ignore
-            root.quit()
+            dialog.destroy()
 
         def cancel_all():
             for idx in range(len(confirmations)):
                 if confirmations[idx] is None:
                     confirmations[idx] = False  # type: ignore
-            root.quit()
+            dialog.destroy()
 
         confirm_all_button = tk.Button(button_frame, text="Confirm All", bg="green", fg="white", font=Styling.font_family, command=confirm_all)
         confirm_all_button.pack(side=tk.LEFT, padx=5)
         cancel_all_button = tk.Button(button_frame, text="Cancel All", bg="red", fg="white", font=Styling.font_family, command=cancel_all)
         cancel_all_button.pack(side=tk.RIGHT, padx=5)
 
-        # Start the main loop
-        root.deiconify()
-        root.mainloop()
+        # Start
+        dialog.deiconify()
+        self.master.withdraw()
+        self.master.wait_window(dialog)
+        self.master.deiconify()
 
-        # Remove root and recycle memory
-        root.destroy()
-        del root
+        # Remove dialog and recycle memory
+        dialog.destroy()
+        del dialog
         gc.collect()
         
         # Filter out None values before returning

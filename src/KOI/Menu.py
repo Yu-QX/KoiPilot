@@ -53,7 +53,7 @@ class KOIMenu(tk.Toplevel):
             
             self.buttons.append(btn)
         self.layout_buttons()
-        self.function_manager = FunctionManager()
+        self.function_manager = FunctionManager(self.master)
 
         # Hide menu initially
         self.withdraw()
