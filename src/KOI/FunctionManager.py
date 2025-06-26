@@ -3,14 +3,15 @@ import threading
 import tkinter as tk
 from typing import Optional
 from tkinter import filedialog, messagebox
-from Listeners import Listener
-from FileManager.Counsellor import Counsellor
-from FileManager.Operations import FileOperator, FolderOperator
-from .Styling import Styling
 
 APP_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if APP_PATH not in sys.path:
     sys.path.append(APP_PATH)
+
+from Listeners import Listener
+from FileManager.Counsellor import Counsellor
+from FileManager.Operations import FileOperator, FolderOperator
+from .Styling import Styling
 
 class FunctionManager:
     """Handles all the functions for KOI to call."""
