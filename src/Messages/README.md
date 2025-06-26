@@ -18,7 +18,7 @@ To start using the module, initialize the `MessageManager` class.
 Use the `GetMessage` method to fetch a message by its ID:
 
 ```python
-message_id = "Prompts/FileToFolder/1"
+message_id = "prompts/FileToFolder/1"
 message = manager.GetMessage(message_id)
 print(message)
 ```
@@ -27,7 +27,7 @@ print(message)
 Use the `Construct` method to dynamically build messages with placeholders:
 
 ```python
-template_id = "Prompts/FileToFolder"
+template_id = "prompts/FileToFolder"
 args = {"file": "example.txt", "folder_options": ["Documents", "Images"]}
 constructed_message = manager.Construct(template_id, **args)
 print(constructed_message)

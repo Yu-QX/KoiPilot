@@ -31,8 +31,8 @@ class MessageManager:
         # System configurations
         self.accepted_file_suffixs = (".md", ".txt")  # Accepted file extensions
         self.base_path = os.path.dirname(os.path.abspath(__file__))  # Base directory path
-        self.messages_path = os.path.join(self.base_path, "MessageCenter")  # Path to message files
-        self.system_code_path = os.path.join(self.base_path, "SystemCodeCenter")  # Path to system code files
+        self.messages_path = os.path.join(self.base_path, "message_center")  # Path to message files
+        self.system_code_path = os.path.join(self.base_path, "system_code_center")  # Path to system code files
 
         self.system_codes = {}  # Dictionary to store system codes and their descriptions
         for file in os.listdir(self.system_code_path):

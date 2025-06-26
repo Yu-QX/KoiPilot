@@ -62,7 +62,7 @@ class Counsellor:
         available_info = {}   # TODO: add functions to `Operations` to enable this
         available_info["file"] = source
         available_info["folder_options"] = folder_options
-        prompt, result_struct = self.messages.Construct(template_id="Prompts/FileToFolder", **available_info)
+        prompt, result_struct = self.messages.Construct(template_id="prompts/FileToFolder", **available_info)
         if not prompt or not isinstance(prompt, str):
             return None
         if not result_struct or not isinstance(result_struct, dict):
@@ -93,7 +93,7 @@ class Counsellor:
         :return: A dictionary containing the original names and their suggested new names.
         """
         # Generate prompt
-        prompt = self.messages.Construct(template_id="Prompts/FormatFileName", name_list=name_list)
+        prompt = self.messages.Construct(template_id="prompts/FormatFileName", name_list=name_list)
         if not prompt or not isinstance(prompt, str):
             return {}
     
