@@ -8,6 +8,21 @@ if APP_PATH not in sys.path:
 from Environment import PATH_SECURITY_FILE, load_json_with_backup
 from Environment import Logger
 
+# Helper function to find the longest prefix match
+def longest_prefix_match(target, candidates):
+    """
+    Finds the longest prefix match between a target string and a list of candidates.
+
+    :param target: The target string to match.
+    :param candidates: A list of strings to match against.
+    :return: The longest prefix match between the target string and the candidates, or None if no match is found.
+    """
+    best_match = None
+    for candidate in candidates:
+        if target.startswith(candidate) and (best_match is None or len(candidate) > len(best_match)):
+            best_match = candidate
+    return best_match
+
 class Guard:
     """Prevent illegal operations"""
     def __init__(self, security_file: str = PATH_SECURITY_FILE):
@@ -22,7 +37,19 @@ class Guard:
 
         :return: Security file
         """
-        self.security_info = load_json_with_backup(self.path, {}, "security")
+        default_data = {
+            "permit": {
+                "R": [],
+                "W": [],
+                "D": []
+            },
+            "exclude": {
+                "R": [],
+                "W": [],
+                "D": []
+            }
+        }
+        self.security_info = load_json_with_backup(self.path, default_data, "security")
         return self.security_info
 
     def Save(self):
@@ -32,12 +59,14 @@ class Guard:
         with open(self.path, 'w') as f:
             json.dump(self.security_info, f, indent=2)
 
-    def Add(self, path: str, mode: str):
+    def Add(self, path: str, mode: str, category: str = "permit"):
         """
         Add a path to security file
 
         :param path: Path to add
         :param mode: Mode to add
+        :param category: Category to add to ("permit" or "exclude"), defaults to "permit"
+        :return: True if added successfully, False otherwise
         """
         success = False
         mode = mode.upper()
@@ -46,8 +75,8 @@ class Guard:
 
         # Add path if not exists
         if mode in self.mode_list:
-            if path not in self.security_info.get(mode, []):
-                self.security_info.setdefault(mode, []).append(path)
+            if path not in self.security_info.get(category, {}).get(mode, []):
+                self.security_info.setdefault(category, {}).setdefault(mode, []).append(path)
                 success = True
         
         # Save
@@ -56,12 +85,14 @@ class Guard:
         self.Save()
         return success
 
-    def Remove(self, path: str, mode: str):
+    def Remove(self, path: str, mode: str, category: str = "permit"):
         """
         Remove a path from security file
 
         :param path: Path to remove
         :param mode: Mode to remove
+        :param category: Category to remove from ("permit" or "exclude"), defaults to "permit"
+        :return: True if removed successfully, False otherwise
         """
         success = False
         mode = mode.upper()
@@ -69,8 +100,8 @@ class Guard:
         path = os.path.abspath(path)
 
         # Remove path if exists
-        if mode in self.mode_list and path in self.security_info.get(mode, []):
-            self.security_info[mode].remove(path)
+        if mode in self.mode_list and path in self.security_info.get(category, {}).get(mode, []):
+            self.security_info[category][mode].remove(path)
             success = True
         
         # Save
@@ -91,10 +122,23 @@ class Guard:
         # Format path
         path = os.path.abspath(path)
 
-        # Check path
-        result = mode in self.mode_list and path in self.security_info.get(mode, [])
+        # Get permit and exclude lists for the given mode
+        permit_list = self.security_info.get("permit", {}).get(mode, [])
+        exclude_list = self.security_info.get("exclude", {}).get(mode, [])
 
-        # Log
+        # Step 1: Find the best permit match
+        permit_match = longest_prefix_match(path, permit_list)
+        if not permit_match:
+            result = False  # No permit match means access denied
+        else:
+            # Step 2: Find the best exclude match
+            exclude_match = longest_prefix_match(path, exclude_list)
+            if exclude_match and len(exclude_match) >= len(permit_match):
+                result = False  # Exclude overrides permit if equally or more specific
+            else:
+                result = True  # Permit takes precedence
+
+        # Log the decision
         self.logger.Log(f"{path} -> {mode}: {result}")
         return result
 
