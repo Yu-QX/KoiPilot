@@ -1,5 +1,13 @@
-import os
-import shutil
+import os, sys
+import shutil, json
+from typing import Optional
+
+APP_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if APP_PATH not in sys.path:
+    sys.path.append(APP_PATH)
+
+from Environment import PATH_SECURITY_FILE, load_json_with_backup
+from Environment import Logger
 
 # TODO: Log changes
 
@@ -163,4 +171,86 @@ class FolderOperator:
 
 class Guard:
     """Prevent illegal operations"""
-    # TODO: implement this
+    def __init__(self, security_file: str = PATH_SECURITY_FILE):
+        self.path = security_file
+        self.mode_list = ("R", "W", "D")
+        self.logger = Logger("File Guard")
+        self.Load()
+
+    def Load(self) -> dict:
+        """
+        Load security file
+
+        :return: Security file
+        """
+        self.security_info = load_json_with_backup(self.path, {}, "security")
+        return self.security_info
+
+    def Save(self):
+        """
+        Save security file
+        """
+        with open(self.path, 'w') as f:
+            json.dump(self.security_info, f, indent=2)
+
+    def Add(self, path: str, mode: str):
+        """
+        Add a path to security file
+
+        :param path: Path to add
+        :param mode: Mode to add
+        """
+        success = False
+        mode = mode.upper()
+        # Format path
+        path = os.path.abspath(path)
+
+        # Add path if not exists
+        if mode in self.mode_list:
+            if path not in self.security_info.get(mode, []):
+                self.security_info.setdefault(mode, []).append(path)
+                success = True
+        
+        # Save
+        if success:
+            self.logger.Log(f"+{mode} {path}")
+        self.Save()
+        return success
+
+    def Remove(self, path: str, mode: str):
+        """
+        Remove a path from security file
+
+        :param path: Path to remove
+        :param mode: Mode to remove
+        """
+        success = False
+        mode = mode.upper()
+        # Format path
+        path = os.path.abspath(path)
+
+        # Remove path if exists
+        if mode in self.mode_list and path in self.security_info.get(mode, []):
+            self.security_info[mode].remove(path)
+            success = True
+        
+        # Save
+        if success:
+            self.logger.Log(f"-{mode} {path}")
+        self.Save()
+        return success
+
+    def Check(self, path: str, mode: str) -> bool:
+        """
+        Check if a path is allowed
+
+        :param path: Path to check
+        :param mode: Mode to check
+        :return: True if allowed, False otherwise
+        """
+        mode = mode.upper()
+        # Format path
+        path = os.path.abspath(path)
+
+        # Check path
+        return mode in self.mode_list and path in self.security_info.get(mode, [])
