@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, platform
 import shutil, json
 
 APP_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -7,6 +7,37 @@ if APP_PATH not in sys.path:
 
 from Environment import PATH_SECURITY_FILE, load_json_with_backup
 from Environment import Logger
+
+# Common paths allowable
+COMMON_PATHS = {
+    "Windows": [
+        os.path.normpath(os.path.expanduser("~/Documents")),
+        os.path.normpath(os.path.expanduser("~/Downloads")),
+        os.path.normpath(os.path.expanduser("~/Pictures")),
+        os.path.normpath(os.path.expanduser("~/Videos")),
+        os.path.normpath(os.path.expanduser("~/Music")),
+        os.path.normpath("C:\\Program Files"),
+        os.path.normpath("C:\\Users\\Public")
+    ],
+    "Linux": [
+        os.path.normpath(os.path.expanduser("~/Documents")),
+        os.path.normpath(os.path.expanduser("~/Downloads")),
+        os.path.normpath(os.path.expanduser("~/Pictures")),
+        os.path.normpath(os.path.expanduser("~/Videos")),
+        os.path.normpath(os.path.expanduser("~/Music")),
+        os.path.normpath("/usr/local/bin"),
+        os.path.normpath("/var/www/html")
+    ],
+    "Darwin": [
+        os.path.normpath(os.path.expanduser("~/Documents")),
+        os.path.normpath(os.path.expanduser("~/Downloads")),
+        os.path.normpath(os.path.expanduser("~/Pictures")),
+        os.path.normpath(os.path.expanduser("~/Movies")),
+        os.path.normpath(os.path.expanduser("~/Music")),
+        os.path.normpath("/Applications"),
+        os.path.normpath("/Library/Application Support")
+    ]
+}
 
 # Helper function to find the longest prefix match
 def longest_prefix_match(target, candidates):
@@ -26,18 +57,12 @@ def longest_prefix_match(target, candidates):
 class Guard:
     """Prevent illegal operations"""
     def __init__(self, security_file: str = PATH_SECURITY_FILE):
+        self.logger = Logger("File Guard")
         self.path = security_file
         self.mode_list = ("R", "W", "D")
-        self.logger = Logger("File Guard")
-        self.Load()
 
-    def Load(self) -> dict:
-        """
-        Load security file
-
-        :return: Security file
-        """
-        default_data = {
+        # Initialize default data
+        self.default_data = {
             "permit": {
                 "R": [],
                 "W": [],
@@ -49,7 +74,31 @@ class Guard:
                 "D": []
             }
         }
-        self.security_info = load_json_with_backup(self.path, default_data, "security")
+        
+        current_os = os.name
+        if current_os == "nt":
+            os_key = "Windows"
+        elif current_os == "posix":
+            if platform.system() == "Darwin":
+                os_key = "Darwin"
+            else:
+                os_key = "Linux"
+        else:
+            os_key = None
+
+        if os_key and COMMON_PATHS.get(os_key):
+            for mode in self.mode_list:
+                self.default_data["permit"][mode].extend(COMMON_PATHS[os_key])
+
+        self.Load()
+
+    def Load(self) -> dict:
+        """
+        Load security file
+
+        :return: Security file
+        """
+        self.security_info = load_json_with_backup(self.path, self.default_data, "security")
         return self.security_info
 
     def Save(self):
@@ -70,15 +119,15 @@ class Guard:
         """
         success = False
         mode = mode.upper()
-        # Format path
-        path = os.path.abspath(path)
+        # Format and normalize path
+        path = os.path.normpath(os.path.abspath(path))
 
         # Add path if not exists
         if mode in self.mode_list:
             if path not in self.security_info.get(category, {}).get(mode, []):
                 self.security_info.setdefault(category, {}).setdefault(mode, []).append(path)
                 success = True
-        
+
         # Save
         if success:
             self.logger.Log(f"+{mode} {path}")
@@ -96,14 +145,14 @@ class Guard:
         """
         success = False
         mode = mode.upper()
-        # Format path
-        path = os.path.abspath(path)
+        # Format and normalize path
+        path = os.path.normpath(os.path.abspath(path))
 
         # Remove path if exists
         if mode in self.mode_list and path in self.security_info.get(category, {}).get(mode, []):
             self.security_info[category][mode].remove(path)
             success = True
-        
+
         # Save
         if success:
             self.logger.Log(f"-{mode} {path}")
@@ -120,7 +169,7 @@ class Guard:
         """
         mode = mode.upper()
         # Format path
-        path = os.path.abspath(path)
+        path = os.path.normpath(os.path.abspath(path))
 
         # Get permit and exclude lists for the given mode
         permit_list = self.security_info.get("permit", {}).get(mode, [])
@@ -155,6 +204,8 @@ class FileOperator:
         :return: An error code indicating the result of the operation.
         """
         # Check permissions: D+W in parent folder
+        old_name = os.path.normpath(old_name)
+        new_name = os.path.normpath(new_name)
         source_parent = os.path.dirname(old_name)
         dest_parent = os.path.dirname(new_name)
         if not Guard().Check(source_parent, "D"):
@@ -180,6 +231,8 @@ class FileOperator:
         :return: An error code indicating the result of the operation.
         """
         # Check permissions: D in source; W in destination
+        file_path = os.path.normpath(file_path)
+        destination_folder = os.path.normpath(destination_folder)
         source_parent = os.path.dirname(file_path)
         if not Guard().Check(source_parent, "D"):
             return 210103  # Delete Permission Denied (source)
@@ -190,7 +243,7 @@ class FileOperator:
             return 210111  # Source File Not Found
         if not os.path.isdir(destination_folder):
             return 210114  # Destination Folder Not Found
-        new_path = os.path.join(destination_folder, os.path.basename(file_path))
+        new_path = os.path.normpath(os.path.join(destination_folder, os.path.basename(file_path)))
         os.rename(file_path, new_path)
         Logger("File Operator").Log(f"MoveFile: {file_path} -> {new_path}")
         return 210000  # Success
@@ -204,6 +257,7 @@ class FileOperator:
         :return: An error code indicating the result of the operation.
         """
         # Check permissions: D in parent folder
+        file_path = os.path.normpath(file_path)
         parent_folder = os.path.dirname(file_path)
         if not Guard().Check(parent_folder, "D"):
             return 210103  # Delete Permission Denied
@@ -226,6 +280,7 @@ class FolderOperator:
         :return: An error code indicating the result of the operation.
         """
         # Check permissions: W in parent folder
+        folder_path = os.path.normpath(folder_path)
         parent_folder = os.path.dirname(folder_path)
         if not Guard().Check(parent_folder, "W"):
             return 210102  # Write Permission Denied
@@ -246,6 +301,8 @@ class FolderOperator:
         :return: An error code indicating the result of the operation.
         """
         # Check permissions: D+W in parent folder
+        old_name = os.path.normpath(old_name)
+        new_name = os.path.normpath(new_name)
         old_parent = os.path.dirname(old_name)
         new_parent = os.path.dirname(new_name)
         if not Guard().Check(old_parent, "D"):
@@ -270,6 +327,7 @@ class FolderOperator:
         :return: An error code indicating the result of the operation.
         """
         # Check permissions: D in parent folder
+        folder_path = os.path.normpath(folder_path)
         parent_folder = os.path.dirname(folder_path)
         if not Guard().Check(parent_folder, "D"):
             return 210103  # Delete Permission Denied
@@ -292,6 +350,8 @@ class FolderOperator:
         :return: An error code indicating the result of the operation.
         """
         # Check permissions: D in source; W in destination
+        folder_path = os.path.normpath(folder_path)
+        destination_folder = os.path.normpath(destination_folder)
         source_parent = os.path.dirname(folder_path)
         if not Guard().Check(source_parent, "D"):
             return 210103  # Delete Permission Denied (source)
@@ -302,7 +362,7 @@ class FolderOperator:
             return 210114  # Destination Folder Not Found
         if not os.path.isdir(destination_folder):
             return 210114  # Destination Folder Not Found
-        new_path = os.path.join(destination_folder, os.path.basename(folder_path))
+        new_path = os.path.normpath(os.path.join(destination_folder, os.path.basename(folder_path)))
         os.rename(folder_path, new_path)
         Logger("Folder Operator").Log(f"MoveFolder: {folder_path} -> {new_path}")
         return 210000  # Success
@@ -316,6 +376,8 @@ class FolderOperator:
         :param full_path: Whether to return the full path or just the folder name
         :return: A list of sub folders or an error code
         """
+        folder_path = os.path.normpath(folder_path)
+
         # Check permissions: R in folder
         if not Guard().Check(folder_path, "R"):
             return []  # Read Permission Denied
@@ -343,6 +405,8 @@ class FolderOperator:
         :param full_path: Whether to return the full path or just the file name
         :return: A list of files or an error code
         """
+        folder_path = os.path.normpath(folder_path)
+
         # Check permissions: R in folder
         if not Guard().Check(folder_path, "R"):
             return []  # Read Permission Denied

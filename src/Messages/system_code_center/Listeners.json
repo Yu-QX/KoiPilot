@@ -40,11 +40,15 @@
     "[110000,119999]": "Listeners Module Status Codes",
     "110000": "Success",
     "110001": "Invalid API type",
+    "110002": "Invalid API key",
+    "110011": "Generation Failed",
+    "110021": "Wrong System Configuration",
     "[110100,110199]": "OllamaListener Status Codes",
     "110100": "Success",
     "110101": "Host Not Found",
     "110102": "Invalid Version",
     "110111": "Model Not Provided",
     "110112": "Invalid Model",
-    "110121": "Generation Error"
+    "110121": "Generation Error",
+    "110122": "Connection Error"
 }

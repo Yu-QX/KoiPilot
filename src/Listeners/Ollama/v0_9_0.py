@@ -1,10 +1,18 @@
+import os, sys
 import json
 import requests
 from typing import Optional
 from urllib.parse import urljoin
 
+APP_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if APP_PATH not in sys.path:
+    sys.path.append(APP_PATH)
+
+from Environment import Logger
+
 class OllamaListener:
     def __init__(self, host: str = "localhost", port: int = 11434, api_key: Optional[str] = None):
+        self.logger = Logger("OllamaListener")
         self.host = host
         self.port = port
         self.api_key = api_key
@@ -17,20 +25,20 @@ class OllamaListener:
         self.check_connection()
 
         if self.api_key:
-            print("API key is currently not supported.")
+            self.logger.Log("<110001> API key is currently not supported.")
 
     def check_connection(self) -> bool:
         try:
             response = requests.get(self.url)
             self.connection_error = response.status_code != 200
             if self.connection_error:
-                print("Failed to connect to Ollama server")
+                self.logger.Log(f"<110122> Failed to connect to Ollama server at {self.url}")
                 return False
             else:
-                print("Connected to Ollama server")
+                self.logger.Log("<110100> Connected to Ollama server")
                 return True
         except requests.exceptions.RequestException:
-            print("Failed to connect to Ollama server")
+            self.logger.Log(f"<110122> Failed to connect to Ollama server at {self.url}")
             self.connection_error = True
             return False
 
@@ -41,11 +49,11 @@ class OllamaListener:
             response.raise_for_status()
             models = response.json().get("models", [])
             if not isinstance(models, list) or len(models) == 0 or "name" not in models[0]:
-                print("Invalid or empty model data received.")
+                self.logger.Log("<110112> Invalid or empty model data received.")
                 return None
             return models[0]["name"]
         except (requests.exceptions.RequestException, json.JSONDecodeError) as e:
-            print(f"Error fetching models: {e}")
+            self.logger.Log(f"<110121> Error fetching models: {e}")
             return None
 
     def GenerateRaw(self, prompt: str, **kwargs) -> Optional[dict]:
@@ -53,7 +61,7 @@ class OllamaListener:
         # Check connection
         self.check_connection()
         if self.connection_error:
-            print("Cannot generate due to connection error.")
+            self.logger.Log("<110122> Cannot generate due to connection error.")
             return None
 
         # Prepare data
@@ -68,7 +76,7 @@ class OllamaListener:
         if "model" not in data:
             data["model"] = self.pick_model()
             if data["model"] is None:
-                print("No valid model found.")
+                self.logger.Log("<110112> No valid model found.")
                 return None
 
         # Generate
@@ -85,7 +93,7 @@ class OllamaListener:
             response.raise_for_status()
             return response.json()
         except (requests.exceptions.RequestException, json.JSONDecodeError) as e:
-            print(f"Error generating: {e}")
+            self.logger.Log(f"<110121> Error generating: {e}")
             return None
     
     def ChatRaw(self, messages: list, **kwargs) -> Optional[dict]:
@@ -93,7 +101,7 @@ class OllamaListener:
         # Check connection
         self.check_connection()
         if self.connection_error:
-            print("Cannot chat due to connection error.")
+            self.logger.Log("<110122> Cannot chat due to connection error.")
             return None
         
         # Prepare data
@@ -108,7 +116,7 @@ class OllamaListener:
         if "model" not in data:
             data["model"] = self.pick_model()
             if data["model"] is None:
-                print("No valid model found.")
+                self.logger.Log("<110112> No valid model found.")
                 return None
         
         # Chat
@@ -124,17 +132,17 @@ class OllamaListener:
             response.raise_for_status()
             return response.json()
         except (requests.exceptions.RequestException, json.JSONDecodeError) as e:
-            print(f"Error generating: {e}")
+            self.logger.Log(f"<110121> Error chatting: {e}")
             return None
         
     def Generate(self, prompt: str, **kwargs) -> Optional[str]:
         """Generate returning with string"""
         result = self.GenerateRaw(prompt, **kwargs)
         if result is None:
-            print("Generation failed!")
+            self.logger.Log("<110111> Generation failed!")
             return None
         if not isinstance(result, dict):
-            print("Unexpected content format in 'response'")
+            self.logger.Log("<110111> Unexpected content format in 'response'")
             return None
         
         return result.get("response")
@@ -143,12 +151,12 @@ class OllamaListener:
         """Chat returning with string"""
         result = self.ChatRaw(messages, **kwargs)
         if result is None:
-            print("Chatting failed!")
+            self.logger.Log("<110111> Chatting failed!")
             return None
     
         message = result.get("message")
         if not isinstance(message, dict):
-            print("Unexpected content format in 'message'")
+            self.logger.Log("<110111> Unexpected content format in 'message'")
             return None
 
         return message.get("content")
@@ -158,14 +166,14 @@ class OllamaListener:
         kwargs["format"] = "json"
         result = self.GenerateRaw(prompt, **kwargs)
         if result is None:
-            print("Generation failed!")
+            self.logger.Log("<110111> Generation failed!")
             return None
         if not isinstance(result, dict):
-            print("Unexpected content format in 'response'")
+            self.logger.Log("<110111> Unexpected content format in 'response'")
         
         response = result.get("response")
         if not isinstance(response, str):
-            print("Response content is not a string, cannot parse as JSON.")
+            self.logger.Log("<110111> Response content is not a string, cannot parse as JSON.")
             return None
         
         # Parse JSON
@@ -174,13 +182,13 @@ class OllamaListener:
             start_idx = response.find("{")
             end_idx = response.rfind("}")
             if start_idx == -1 or end_idx == -1 or end_idx <= start_idx:
-                print("No valid JSON structure found.")
+                self.logger.Log("<110111> No valid JSON structure found.")
                 return None
 
             json_str = response[start_idx:end_idx + 1]
             result_json = json.loads(json_str)
         except json.JSONDecodeError:
-            print("Failed to parse JSON")
+            self.logger.Log("<110111> Failed to parse JSON")
             result_json = None
 
         return result_json

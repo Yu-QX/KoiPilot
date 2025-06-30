@@ -79,7 +79,12 @@ class Counsellor:
         if not isinstance(suggestion, dict) or result_key not in suggestion:
             return None
         
+        # Get the result
         result = suggestion[result_key]
+        if not isinstance(result, str):
+            return None
+
+        # Find the closest match
         if result not in folder_options:
             result = find_closest_match(result, folder_options)
                 
@@ -101,7 +106,7 @@ class Counsellor:
         response = self.listener.GenerateJson(prompt, seed=42)
     
         # Parse response
-        if not isinstance(response, dict):
+        if not isinstance(response, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in response.items()):
             return {}
     
         changes = {}
