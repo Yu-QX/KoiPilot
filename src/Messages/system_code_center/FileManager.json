@@ -6,6 +6,7 @@
     "210100": "Success",
     "210101": "Read Permission Denied",
     "210102": "Write Permission Denied",
+    "210103": "Delete Permission Denied",
     "210111": "Source File Not Found",
     "210112": "Source Folder Not Found",
     "210113": "Destination File Not Found",
