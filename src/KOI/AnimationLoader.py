@@ -1,8 +1,6 @@
 import os
 from pathlib import Path
-from typing import Optional
 import tkinter as tk
-
 
 class AnimationLoader:
     @staticmethod

@@ -1,4 +1,11 @@
+import os, sys
 from typing import Optional
+
+APP_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if APP_PATH not in sys.path:
+    sys.path.append(APP_PATH)
+
+from Environment import Logger
 
 class Listener:
     """
@@ -16,6 +23,7 @@ class Listener:
         :param api_key: The API key for authentication. Defaults to None.
         :param version: The version of the AI API. Defaults to None.
         """
+        self.logger = Logger("Listener")
         self.api_type = api_type
         self.api_key = api_key
         self.host = host
@@ -33,7 +41,8 @@ class Listener:
             from .Ollama import GetOllamaListener
             return GetOllamaListener(self.host, self.port, self.api_key, self.version)
         else:
-            raise ValueError(f"Invalid API type: {self.api_type}")
+            self.logger.Log(f"<110001> Invalid API type:")
+            raise ValueError(f"Invalid API type:")
 
     def Generate(self, prompt: str, **kwargs) -> str:
         """
@@ -45,8 +54,13 @@ class Listener:
         """
         # Check if the function is available
         if not hasattr(self.listener, "Generate"):
+            self.logger.Log(f"<110021> The API does not support text generation.")
             return ""
         result = self.listener.Generate(prompt, **kwargs)  # type: ignore
+        if not result:
+            self.logger.Log(f"<110011> The API returned an empty response when Generate.")
+        else:
+            self.logger.Log(f"<110000> Generate succeeded.")
         return result if result is not None else ""
 
     def Chat(self, messages: list, **kwargs) -> str:
@@ -58,8 +72,13 @@ class Listener:
         :return: The generated response.
         """
         if not hasattr(self.listener, "Chat"):
+            self.logger.Log(f"<110021> The API does not support chatting.")
             return ""
         result = self.listener.Chat(messages, **kwargs) # type: ignore
+        if not result:
+            self.logger.Log(f"<110011> The API returned an empty response when Chat.")
+        else:
+            self.logger.Log(f"<110000> Generate succeeded.")
         return result if result is not None else ""
     
     def GenerateJson(self, prompt: str, **kwargs) -> dict:
@@ -71,6 +90,11 @@ class Listener:
         :return: The generated `JSON`.
         """
         if not hasattr(self.listener, "GenerateJson"):
+            self.logger.Log(f"<110021> The API does not support JSON generation.")
             return {}
         result = self.listener.GenerateJson(prompt, **kwargs) # type: ignore
+        if not result:
+            self.logger.Log(f"<110011> Failed to generate JSON.")
+        else:
+            self.logger.Log(f"<110000> Generate succeeded.")
         return result if result is not None else {}

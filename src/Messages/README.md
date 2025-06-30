@@ -1,62 +1,85 @@
 # Description for `Messages` Module
 
-The `Messages` module with `MessageManager` class holds all the messages used in the app. Including:
-- system messages
-- AI prompts
-- system error codes
+The `Messages` module is designed to manage all messages used in the application, including system messages, AI prompts, and system error codes. It provides a centralized way to handle translations and dynamic message construction.
 
-It also provide translations for all messages.
+## Core Features
 
-All messages are stored in the module. 
+- **Message Retrieval**: Fetch messages based on IDs, supporting both JSON files and folder-based structures.
+- **Dynamic Message Construction**: Construct complex messages using templates and arguments.
+- **Language Support**: Automatically selects the preferred language based on user configurations.
+- **Error Handling**: Provides descriptions for system codes and handles invalid inputs gracefully.
 
-## `GetMessage` Attribute
+## How to Use
 
-The `GetMessage` attribute is used to get a message of the ID from the module. The input `message_id` will be converted to a path. If it points to a `JSON` file (no suffix needed in passing in), the file will be loaded to find message in the preferred language; if it is a folder, accepted files with name of different languages in the folder will be searched.
+### 1. Initialize the Message Manager
+To start using the module, initialize the `MessageManager` class.
 
-In `JSON` mode:
+### 2. Retrieve a Message
+Use the `GetMessage` method to fetch a message by its ID:
+
+```python
+message_id = "prompts/FileToFolder/1"
+message = manager.GetMessage(message_id)
+print(message)
+```
+
+### 3. Construct a Message
+Use the `Construct` method to dynamically build messages with placeholders:
+
+```python
+template_id = "prompts/FileToFolder"
+args = {"file": "example.txt", "folder_options": ["Documents", "Images"]}
+constructed_message = manager.Construct(template_id, **args)
+print(constructed_message)
+```
+
+### 4. Get System Code Description
+Retrieve the description of a system code using the [SystemCode](file://d:\CodeHub\KoiPilot\src\Messages\__init__.py#L197-L207) method:
+
+```python
+code = 210100
+description = manager.SystemCode(code)
+print(description)
+```
+
+## Language Support
+
+The module supports multiple languages, with a priority order defined in the configuration. The default priority is:
+
+```python
+self.LanguagePriorities = ["EN", "CN"]
+```
+
+If a file or JSON entry does not exist for the preferred language, the next available language in the list will be used.
+
+## Error Handling
+
+The module includes robust error handling:
+- If a message ID points to an invalid path, an empty string is returned.
+- JSON decoding errors are caught and logged.
+- Missing system codes return a default message: `"Unknown System Code"`.
+
+## Example Directory Structure
+
+### JSON Mode
+A JSON file contains translations for different languages:
 
 ```json
-// TargetFile.json
 {
     "EN": "Hello!",
     "CN": "你好!"
 }
 ```
 
-In `Folder` mode:
+### Folder Mode
+A folder contains files named after supported languages:
 
-```txt
+```
 TargetFolder/
 ├── EN.md
 └── CN.md
 ```
 
-## `Construct` Attribute
+## Additional Notes
 
-The `Construct` attribute is used to construct messages with given templates and other arguments. It can decide on which message to use based on offered arguments. The ID must point to a `JSON`.
-
-Example template `JSON`:
-
-```json
-{
-    "block 1": {
-        "message_id": "a/b/c",  // Use ID for message (recommended method)
-    },  // The block will be used only if all required arguments are provided.
-    "block 2": {
-        "message": "Hello, {name}!",  // When `message_id` and `message` are both provided, `message` will be ignored.
-        "case": [
-            "requirement 1",
-            "requirement 2",  // When passing in a string, check arguments and convert to boolean.
-            {"requirement 3": "value"}  // When passing in a dict, check if the arguments match.
-        ]  // The block will be used only if all requirements are met. Can also used a single string or dictionary. (Optional)
-    },  // blocks are lined up in order.
-    "block 3": {
-        "message_id": "a/b/d",
-        "dont_format": true  // Don't format the message. Use it if there is `{}` enclosing unexpected stuff in the message.
-    },  // New line will be automaticly added between blocks. You can also specify with `join_with`.
-    "RESPONSE_FORMAT": {
-        "result": "folder",
-        "reason": "reason"
-    }  // Capitals are reserved for special functions. `RESPONSE_FORMAT` indicates the AI response format.
-}
-```
+For more details on template structure and usage, refer to the inline comments in the [`__init__.py`](__init__.py) file.

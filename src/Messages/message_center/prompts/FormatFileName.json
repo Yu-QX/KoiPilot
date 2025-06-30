@@ -1,0 +1,13 @@
+{
+    "1_introduction": {
+        "message_id": "prompts/FormatFileNames/1",
+        "dont_format": true
+    },
+    "2_example": {
+        "message_id": "prompts/FormatFileNames/2",
+        "dont_format": true
+    },
+    "3_additional_info": {
+        "message_id": "prompts/FormatFileNames/3"
+    }
+}

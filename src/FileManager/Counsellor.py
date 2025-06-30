@@ -43,8 +43,6 @@ def find_closest_match(string: str, options: list[str]) -> Optional[str]:
     
     return result
 
-
-
 class Counsellor:
     """AI suggestions for file operations"""
     def __init__(self, model: Optional[str] = None, api_type: str = "ollama", host: str = "localhost", port: Optional[int] = None, api_key: Optional[str] = None, version: Optional[str] = None):
@@ -64,7 +62,7 @@ class Counsellor:
         available_info = {}   # TODO: add functions to `Operations` to enable this
         available_info["file"] = source
         available_info["folder_options"] = folder_options
-        prompt, result_struct = self.messages.Construct(template_id="Prompts/FileToFolder", **available_info)
+        prompt, result_struct = self.messages.Construct(template_id="prompts/FileToFolder", **available_info)
         if not prompt or not isinstance(prompt, str):
             return None
         if not result_struct or not isinstance(result_struct, dict):
@@ -81,7 +79,12 @@ class Counsellor:
         if not isinstance(suggestion, dict) or result_key not in suggestion:
             return None
         
+        # Get the result
         result = suggestion[result_key]
+        if not isinstance(result, str):
+            return None
+
+        # Find the closest match
         if result not in folder_options:
             result = find_closest_match(result, folder_options)
                 
@@ -95,7 +98,7 @@ class Counsellor:
         :return: A dictionary containing the original names and their suggested new names.
         """
         # Generate prompt
-        prompt = self.messages.Construct(template_id="Prompts/FormatFileName", name_list=name_list)
+        prompt = self.messages.Construct(template_id="prompts/FormatFileName", name_list=name_list)
         if not prompt or not isinstance(prompt, str):
             return {}
     
@@ -103,7 +106,7 @@ class Counsellor:
         response = self.listener.GenerateJson(prompt, seed=42)
     
         # Parse response
-        if not isinstance(response, dict):
+        if not isinstance(response, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in response.items()):
             return {}
     
         changes = {}
