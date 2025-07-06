@@ -8,6 +8,8 @@ APP_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if APP_PATH not in sys.path:
     sys.path.append(APP_PATH)
 
+from Environment import Logger
+from Environment import UserSetting, UsageRecord
 from Listeners import Listener
 from FileManager.Counsellor import Counsellor
 from FileManager.Operations import FileOperator, FolderOperator

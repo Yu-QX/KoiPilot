@@ -1,6 +1,13 @@
-import os
+import os, sys
 from typing import Optional
 import tkinter as tk
+
+APP_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if APP_PATH not in sys.path:
+    sys.path.append(APP_PATH)
+
+from Environment import Logger
+from Environment import UsageRecord, UserSetting
 from .AnimationLoader import AnimationLoader
 from .Menu import KOIMenu
 
@@ -11,9 +18,14 @@ class DesktopKOI:
     """The main class for the KOI"""
     def __init__(self, root):
         self.root = root
+        self.logger = Logger("KOI main")
+        self.usage_record = UsageRecord()
+        self.user_setting = UserSetting()
 
-        # Define KOI variables (only a display for what will be used)
-        self.x, self.y = 0, 0
+        # Load KOI variables
+        self.x, self.y = self.usage_record.Get("KOI_position") # type: ignore
+        self.animation_path = self.user_setting.Get("animation_path")
+        
         self.height, self.width = 0, 0
         self.animation_level = 0
         self.mood = ""
@@ -37,17 +49,24 @@ class DesktopKOI:
     def load_animations(self, animation_path: Optional[str] = None) -> None:
         # Load animations from folder
         if animation_path is None:
-            self.animation_path = os.path.join(os.path.dirname(__file__), "animations")  # TODO: get another system path
+            if self.animation_path is None:
+                self.animation_path = os.path.join(os.path.dirname(__file__), "animations")  # TODO: get another system path
         else:
+            animation_path = os.path.normpath(os.path.abspath(animation_path))
             self.animation_path = animation_path
         self.animations = AnimationLoader.LoadAnimations(self.animation_path)
         
         # Check if animations is dict
         if not isinstance(self.animations, dict):
             raise ValueError("Failed to load animations")
+        
+        # Record setting
+        self.user_setting.Update(animation_path=self.animation_path)
+
+        # Set mood
         self.SetMood()
 
-    def setup_gui(self, x: Optional[int] = None, y: Optional[int] = None, fps: int = 24) -> None:
+    def setup_gui(self, fps: int = 24) -> None:
         # Remove title bar & make it always on top
         self.root.title("KOI")
         self.root.overrideredirect(True)
@@ -60,11 +79,11 @@ class DesktopKOI:
         # Create the window
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
-        if x is None:
-            x = screen_width - self.width - 50
-        if y is None:
-            y = screen_height - self.height - 100
-        self.x, self.y = int(x), int(y)  # type: ignore
+        if self.x is None:
+            self.x = screen_width - self.width - 50
+        if self.y is None:
+            self.y = screen_height - self.height - 100
+        self.x, self.y = int(self.x), int(self.y)  # type: ignore
         self.root.geometry(f"{self.width}x{self.height}+{self.x}+{self.y}")
 
         # Display the frame
@@ -110,6 +129,9 @@ class DesktopKOI:
         self.x, self.y = self.root.winfo_x(), self.root.winfo_y()
         self.animation_level = 0
         self.root.on_drag = False
+
+        # record the end position
+        self.usage_record.Update(KOI_position=(self.x, self.y))
 
         # DEBUG
         # self.draw_boundary(self.x, self.y, self.x + self.width, self.y + self.height)

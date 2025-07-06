@@ -14,20 +14,26 @@ APP_PATH = os.path.dirname(os.path.abspath(__file__))
 LOG_PATH = os.path.join(APP_PATH, 'log')
 CURRENT_LOG_FILE = os.path.join(LOG_PATH, f'{START_TIME.strftime("%Y-%m-%d_%H-%M-%S")}.log')
 CONFIG_PATH = os.path.join(APP_PATH, 'config')
+CHAT_HISTORY_PATH = os.path.join(APP_PATH, 'chat_history')
 USER_SETTING_FILE = os.path.join(CONFIG_PATH, 'user_setting.json')
 USAGE_RECORD_FILE = os.path.join(CONFIG_PATH, 'usage_record.json')
 PATH_SECURITY_FILE = os.path.join(CONFIG_PATH, 'path_security.json')
+CHAT_HISTORY_FILE = os.path.join(CHAT_HISTORY_PATH, f'{START_TIME.strftime("%Y-%m-%d_%H-%M-%S")}.json')
 
 # Create paths if they don't exist
-for path in [LOG_PATH, CONFIG_PATH]:
+for path in [LOG_PATH, CONFIG_PATH, CHAT_HISTORY_PATH]:
     if not os.path.exists(path):
         os.makedirs(path)
 
 # Use default settings if no settings file exists
 
-DEFAULT_USER_SETTING = {}
+DEFAULT_USER_SETTING = {
+    "animation_path": None
+}
 
-DEFAULT_USAGE_RECORD = {}
+DEFAULT_USAGE_RECORD = {
+    "KOI_position": (0, 0),
+}
 
 
 def load_json_with_backup(file_path, default_data, entity_name):
@@ -53,84 +59,6 @@ def load_json_with_backup(file_path, default_data, entity_name):
             json.dump(default_data, f, indent=2)
         return default_data
 
-
-class UserSetting:
-    """A class to handle user settings."""
-    def __init__(self):
-        self.path = USER_SETTING_FILE
-        self.settings = self.Load()
-
-    def Load(self) -> dict:
-        """
-        Loads user settings from the file.
-
-        :return: The loaded user settings.
-        """
-        return load_json_with_backup(self.path, DEFAULT_USER_SETTING, "user settings")
-
-    def Save(self):
-        """
-        Saves the user settings to the file.
-        """
-        with open(self.path, 'w') as f:
-            json.dump(self.settings, f, indent=2)
-
-    def Update(self, **kwargs):
-        """
-        Updates user settings with the provided keyword arguments.
-
-        :param kwargs: Keyword arguments to update the settings.
-        """
-        self.settings.update(kwargs)
-        self.Save()
-
-    def Get(self, key):
-        """
-        Gets a setting value by key.
-
-        :param key: The key of the setting to retrieve.
-        :return: The value of the setting, or None if the key does not exist.
-        """
-        return self.settings.get(key)
-
-class UsageRecord:
-    """A class to handle usage records."""
-    def __init__(self):
-        self.path = USAGE_RECORD_FILE
-        self.record = self.Load()
-
-    def Load(self) -> dict:
-        """
-        Loads usage record from the file.
-
-        :return: The loaded usage record.
-        """
-        return load_json_with_backup(self.path, DEFAULT_USAGE_RECORD, "usage record")
-
-    def Save(self):
-        """
-        Saves the usage record to the file.
-        """
-        with open(self.path, 'w') as f:
-            json.dump(self.record, f, indent=2)
-
-    def Update(self, **kwargs):
-        """
-        Updates usage record with the provided keyword arguments.
-
-        :param kwargs: Keyword arguments to update the record.
-        """
-        self.record.update(kwargs)
-        self.Save()
-
-    def Get(self, key):
-        """
-        Gets a usage record value by key.
-
-        :param key: The key of the record to retrieve.
-        :return: The value of the record, or None if the key does not exist.
-        """
-        return self.record.get(key)
 
 class Logger:
     """A class to handle logging operations."""
@@ -184,6 +112,60 @@ class Logger:
                             "message": message
                         })
         return logs
+
+
+class system_json:
+    """Base class for managing JSON data files."""
+    def __init__(self, path, default_data, entity_name):
+        self.path = path
+        self.default_data = default_data
+        self.entity_name = entity_name
+        self.data = self.Load()
+
+    def Load(self) -> dict:
+        """
+        Loads JSON data from the file.
+
+        :return: The loaded JSON data.
+        """
+        return load_json_with_backup(self.path, self.default_data, self.entity_name)
+
+    def Save(self):
+        """
+        Saves the current JSON data to the file.
+        """
+        with open(self.path, 'w') as f:
+            json.dump(self.data, f, indent=2)
+
+    def Update(self, **kwargs):
+        """
+        Updates the JSON data with the provided keyword arguments.
+
+        :param kwargs: Keyword arguments to update the data.
+        """
+        self.data.update(kwargs)
+        self.Save()
+
+    def Get(self, key):
+        """
+        Retrieves a value by key from the JSON data.
+
+        :param key: The key of the value to retrieve.
+        :return: The value or None if the key does not exist.
+        """
+        return self.data.get(key)
+
+
+class UserSetting(system_json):
+    """A class to handle user settings."""
+    def __init__(self):
+        super().__init__(USER_SETTING_FILE, DEFAULT_USER_SETTING, "user settings")
+
+
+class UsageRecord(system_json):
+    """A class to handle usage records."""
+    def __init__(self):
+        super().__init__(USAGE_RECORD_FILE, DEFAULT_USAGE_RECORD, "usage record")
 
 # Initial logging
 logger = Logger("BASE")
