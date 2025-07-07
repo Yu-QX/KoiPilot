@@ -10,6 +10,7 @@ from Environment import Logger
 from Environment import UsageRecord, UserSetting
 from .AnimationLoader import AnimationLoader
 from .Menu import KOIMenu
+from .FunctionManager import FunctionManager
 
 # Developer Note: 
 # - `CamelCase` for variables and functions to export and `snake_case` for internal use 
@@ -31,18 +32,25 @@ class DesktopKOI:
         self.mood = ""
 
         # Launch window
-        self.load_animations()  # TODO: allow config for animations
-        self.setup_gui()        # TODO: remember the location when last used
+        self.load_animations()
+        self.setup_gui() 
 
         # Bind events for menu
-        self.menu = KOIMenu(self.root)
+        self.menu = KOIMenu(self.root, self)
         self.root.bind("<Enter>", self.menu.Show)
 
         # Bind events for dragging
-        self.root.on_drag = False
+        self.on_drag = False
         self.root.bind("<ButtonPress-1>", self.on_drag_start)
         self.root.bind("<B1-Motion>", self.on_drag_motion)
         self.root.bind("<ButtonRelease-1>", self.on_drag_end)
+
+        # Initialize function manager with cross-references
+        self.function_manager = FunctionManager(
+            self.root,
+            desktop_koi=self,
+            koi_menu=self.menu
+        )
 
         self.root.mainloop()
         
@@ -108,7 +116,7 @@ class DesktopKOI:
 
     def on_drag_start(self, event):
         """Store the initial mouse position when dragging starts."""
-        self.root.on_drag = True
+        self.on_drag = True
         self.start_x = event.x
         self.start_y = event.y
         self.animation_level = 10
@@ -128,7 +136,7 @@ class DesktopKOI:
         # get the current window position
         self.x, self.y = self.root.winfo_x(), self.root.winfo_y()
         self.animation_level = 0
-        self.root.on_drag = False
+        self.on_drag = False
 
         # record the end position
         self.usage_record.Update(KOI_position=(self.x, self.y))

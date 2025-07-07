@@ -17,7 +17,11 @@ from .Styling import Styling
 
 class FunctionManager:
     """Handles all the functions for KOI to call."""
-    def __init__(self, master):
+    def __init__(self, master, desktop_koi, koi_menu):
+        # Reference to main application and menu system
+        self.desktop_koi = desktop_koi  
+        self.koi_menu = koi_menu 
+        
         # TODO: Auto load from config file
         model: Optional[str] = "qwen3:0.6B" # change it to your model
         api_type: str = "ollama"
@@ -32,7 +36,7 @@ class FunctionManager:
         self.master = master
         self.counsellor = Counsellor(model, api_type, host, port, api_key, version)
         self.listener = Listener(api_type, host, port, api_key, version)
-    
+
     def confirmation_dialog(self, changes: Optional[dict] = None) -> list[bool]:
         """
         Displays a confirmation dialog window to the user.

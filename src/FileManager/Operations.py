@@ -16,6 +16,7 @@ COMMON_PATHS = {
         os.path.normpath(os.path.expanduser("~/Pictures")),
         os.path.normpath(os.path.expanduser("~/Videos")),
         os.path.normpath(os.path.expanduser("~/Music")),
+        os.path.normpath(os.path.expanduser("~/Desktop")),
         os.path.normpath("C:\\Program Files"),
         os.path.normpath("C:\\Users\\Public")
     ],
@@ -25,6 +26,7 @@ COMMON_PATHS = {
         os.path.normpath(os.path.expanduser("~/Pictures")),
         os.path.normpath(os.path.expanduser("~/Videos")),
         os.path.normpath(os.path.expanduser("~/Music")),
+        os.path.normpath(os.path.expanduser("~/Desktop")),
         os.path.normpath("/usr/local/bin"),
         os.path.normpath("/var/www/html")
     ],
@@ -34,6 +36,7 @@ COMMON_PATHS = {
         os.path.normpath(os.path.expanduser("~/Pictures")),
         os.path.normpath(os.path.expanduser("~/Movies")),
         os.path.normpath(os.path.expanduser("~/Music")),
+        os.path.normpath(os.path.expanduser("~/Desktop")),
         os.path.normpath("/Applications"),
         os.path.normpath("/Library/Application Support")
     ]

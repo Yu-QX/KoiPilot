@@ -4,12 +4,17 @@ from typing import Optional
 from .FunctionManager import FunctionManager
 from .Styling import Styling
 
-# Developer Note: 
+# Developer Note:
 # - `CamelCase` for variables and functions to export and `snake_case` for internal use 
 
 class KOIMenu(tk.Toplevel):
-    def __init__(self, master: tk.Tk):
+    def __init__(self, master: tk.Tk, desktop_koi):
+        # Reference to main application
         super().__init__(master)
+        self.desktop_koi = desktop_koi
+        
+        # Initialize function manager with required parameters
+        self.function_manager = FunctionManager(self.master, desktop_koi=desktop_koi, koi_menu=self)
         
         # Configure window
         self.title("KOI Menu")
@@ -36,6 +41,7 @@ class KOIMenu(tk.Toplevel):
             "Sort Files": self.button_sort_files,
             "Format Names": self.button_format_names,
             "Chat": self.button_chat,
+            "Exit": self.button_exit
         }  # TODO: Import `Messages` module
         for text, action in self.button_list.items():
             btn = tk.Button(
@@ -53,7 +59,6 @@ class KOIMenu(tk.Toplevel):
             
             self.buttons.append(btn)
         self.layout_buttons()
-        self.function_manager = FunctionManager(self.master)
 
         # Hide menu initially
         self.withdraw()
@@ -82,32 +87,31 @@ class KOIMenu(tk.Toplevel):
 
     def Show(self, event: Optional[tk.Event] = None):
         """Show the menu with a fade-in effect"""
-        if self.menu_visible or getattr(self.master, 'on_drag', False):
+        if self.menu_visible or getattr(self.desktop_koi, 'on_drag', False):
             return
 
-        # Calculate position (centered relative to main window)
-        self.master.update_idletasks()  # Ensure we have current geometry values
+        # Ensure we have current geometry values
+        self.master.update_idletasks()
 
-        # Get master window properties
+        # Calculate position (centered relative to main window)
         master_x = self.master.winfo_x()
         master_y = self.master.winfo_y()
         master_width = self.master.winfo_width()
         center_x = int(master_x + (master_width / 2))
         center_y = int(master_y)
 
-        menu_width = self.width  # Use dynamically calculated width
-        menu_height = self.height  # Use dynamically calculated height
+        # Set menu dimensions
+        menu_width = self.width
+        menu_height = self.height
         post_x = center_x - (menu_width // 2)
         post_y = center_y - menu_height
 
-        # Record position
+        # Record position and set geometry
         self.x1, self.y1 = post_x, post_y
         self.x2, self.y2 = post_x + menu_width, post_y + menu_height
-
-        # Position window
         self.geometry(f"{menu_width}x{menu_height}+{post_x}+{post_y}")
-        
-        # Start from hidden state; Gradually increase alpha using duration_fade
+
+        # Fade-in effect
         self.attributes("-alpha", 0.0)
         self.deiconify()
         steps = 10
@@ -120,14 +124,14 @@ class KOIMenu(tk.Toplevel):
         """Hide the menu with a fade-out effect"""
         if not self.menu_visible:
             return
-        
-        # Gradually decrease alpha using duration_fade
+
+        # Fade-out effect
         steps = 10
         step_delay = self.duration_fade // steps
         for i in range(steps, -1, -1):
             self.after((steps - i) * step_delay, lambda a=i / steps: self.attributes("-alpha", a))
 
-        # After fading out, withdraw the window
+        # Withdraw the window after fading out
         self.after(self.duration_fade, self.withdraw)
         self.menu_visible = False
     
@@ -142,3 +146,8 @@ class KOIMenu(tk.Toplevel):
     def button_format_names(self):
         """Format filenames in a folder using AI"""
         threading.Thread(target=self.function_manager.FormatNames).start()
+
+    def button_exit(self):
+        """Exit the application."""
+        self.master.destroy()
+        self.desktop_koi.logger.Log("Exited KOI")
