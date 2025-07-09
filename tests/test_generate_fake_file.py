@@ -90,7 +90,7 @@ def generate_file_name(date_list: list, name_list: list, file_types_list: list) 
     file_name = name_format.format(date=date, name=name, extension=extension)
     return file_name
 
-file_list = [generate_file_name(date_list, name_list, file_types_list) for _ in range(10)]
+file_list = [generate_file_name(date_list, name_list, file_types_list) for _ in range(20)]
 
 # create fake files in destination_dir
 for file_name in file_list:

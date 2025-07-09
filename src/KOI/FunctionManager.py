@@ -40,7 +40,7 @@ class FunctionManager:
     def confirmation_dialog(self, changes: Optional[dict] = None) -> list[bool]:
         """
         Displays a confirmation dialog window to the user.
-
+        
         :param changes: A dictionary containing the changes to be confirmed. If not assigned, the function will use `self.changes`.
         :return: A list of booleans indicating whether the user confirmed each change.
         """
@@ -48,84 +48,177 @@ class FunctionManager:
             changes = self.changes
         confirmations: list[Optional[bool]] = [None for _ in changes]
         
+        color_bg = Styling.color_background
+        
         # Set up GUI
         dialog = tk.Toplevel(self.master)
         dialog.title("Confirm Changes")
-        dialog.attributes('-topmost', True)
         dialog.configure(bg='black')
-        #dialog.wm_attributes("-transparentcolor", "black")
-
-        color_bg = Styling.color_background
-
-        confirm_window = tk.Canvas(dialog, bg="black", highlightthickness=0)
-        confirm_window.pack(fill=tk.BOTH, expand=True)
+        dialog.resizable(False, False)  # Forbid resizing
         dialog.withdraw()
 
-        # Create buttons
+        # Create main container frame (will hold both scrollable area and buttons)
+        main_container = tk.Frame(dialog, bg=color_bg)
+        main_container.grid(row=0, column=0, sticky="nsew")
+        main_container.rowconfigure(0, weight=1)
+        main_container.columnconfigure(0, weight=1)
+
+        # Create scrollable frame with canvas and scrollbar
+        canvas_frame = tk.Frame(main_container, bg=color_bg)
+        canvas_frame.grid(row=0, column=0, sticky="nsew")
+
+        canvas = tk.Canvas(canvas_frame, bg='black', highlightthickness=0)
+        scrollbar = tk.Scrollbar(canvas_frame, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg=color_bg)
+
+        # Store screen dimensions
+        screen_width = dialog.winfo_screenwidth()
+        screen_height = dialog.winfo_screenheight()
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Pack scrollable content
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Add mouse wheel scrolling
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+
+        # Create pinned buttons container (separate from scrollable content)
+        button_frame = tk.Frame(main_container, bg=color_bg)
+        button_frame.grid(row=1, column=0, sticky="ew")
+
+        # Create content lines
         line_list = []
+        max_line_width = 0  # Track maximum line width
+
+        def adjust_dialog_size():
+            nonlocal max_line_width
+            
+            remaining_lines = [line for line in line_list if line.winfo_exists()]
+            if not remaining_lines:
+                return 0
+
+            # Calculate new dimensions
+            new_scroll_height = sum(line.winfo_height() for line in remaining_lines)
+            new_scroll_height += 2 * 5 * len(remaining_lines)  # Padding
+            
+            # Update max width if needed
+            current_max_width = max(line.winfo_reqwidth() for line in remaining_lines) if remaining_lines else max_line_width
+            max_line_width = max(max_line_width, current_max_width)
+            
+            # Calculate total window height (scroll area + buttons)
+            button_height = button_frame.winfo_reqheight()
+            new_window_height = min(new_scroll_height + button_height + 10, screen_height // 2)
+            
+            # Determine if we need scrollbar
+            needs_scrollbar = (new_scroll_height + button_height) > (screen_height // 2)
+            
+            if needs_scrollbar:
+                # Constrain scrollable area height
+                scrollable_height = new_window_height - button_height - 10
+                canvas.config(height=scrollable_height)
+                scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+            else:
+                # Hide scrollbar when not needed
+                scrollbar.pack_forget()
+                canvas.config(height=new_scroll_height)
+            
+            # Set fixed width for all components
+            canvas.config(width=max_line_width)
+            scrollable_frame.config(width=max_line_width)
+            for line in remaining_lines:
+                line.config(width=max_line_width)
+            
+            # Update geometry
+            dialog.geometry(f"{int(max_line_width + (20 if needs_scrollbar else 0))}x{int(new_window_height)}")
+            
+            return new_window_height
+
         for idx, (original_name, suggested_name) in enumerate(changes.items()):
             # Create a frame for each line
-            line_list.append(tk.Frame(confirm_window, bg=color_bg))
-            line_list[idx].pack(fill=tk.X, padx=10, pady=5)
+            line_frame = tk.Frame(scrollable_frame, bg=color_bg)
+            line_frame.pack(fill=tk.X, padx=5, pady=5)
+            
             # Add labels and buttons
-            original_label = tk.Label(line_list[idx], text=original_name, bg=color_bg, fg="white", font=Styling.font_family)
+            original_label = tk.Label(line_frame, text=original_name, bg=color_bg, fg="white", font=Styling.font_family)
             original_label.pack(side=tk.LEFT, padx=5)
-            arrow = tk.Label(line_list[idx], text="->", bg=color_bg, fg="red", font=Styling.font_family)
+            arrow = tk.Label(line_frame, text="->", bg=color_bg, fg="red", font=Styling.font_family)
             arrow.pack(side=tk.LEFT, padx=5)
-            suggested_label = tk.Label(line_list[idx], text=suggested_name, bg=color_bg, fg="white", font=Styling.font_family)
+            suggested_label = tk.Label(line_frame, text=suggested_name, bg=color_bg, fg="white", font=Styling.font_family)
             suggested_label.pack(side=tk.LEFT, padx=5)
 
-            # Define button commands using lambda to capture current index
+            # Button commands
             def confirm_command(idx):
                 confirmations[idx] = True
                 line_list[idx].destroy()
+                adjust_dialog_size()
                 if not None in confirmations:
                     dialog.destroy()
 
             def cancel_command(idx):
                 confirmations[idx] = False
                 line_list[idx].destroy()
+                adjust_dialog_size()
                 if not None in confirmations:
                     dialog.destroy()
 
-            confirm_button = tk.Button(line_list[idx], text="Confirm", bg="green", fg="white", font=Styling.font_family, command=lambda i=idx: confirm_command(i))
+            confirm_button = tk.Button(line_frame, text="Confirm", bg="green", fg="white", 
+                                font=Styling.font_family, command=lambda i=idx: confirm_command(i))
             confirm_button.pack(side=tk.RIGHT, padx=5)
-            cancel_button = tk.Button(line_list[idx], text="Cancel", bg="red", fg="white", font=Styling.font_family, command=lambda i=idx: cancel_command(i))
+            cancel_button = tk.Button(line_frame, text="Cancel", bg="red", fg="white", 
+                                font=Styling.font_family, command=lambda i=idx: cancel_command(i))
             cancel_button.pack(side=tk.RIGHT, padx=5)
 
-        # Add "Confirm All" and "Cancel All" buttons at the bottom
-        button_frame = tk.Frame(confirm_window, bg=color_bg)
-        button_frame.pack(fill=tk.X, padx=10, pady=10)
+            line_list.append(line_frame)
 
+        # Add "Confirm All" and "Cancel All" buttons
         def confirm_all():
             for idx in range(len(confirmations)):
                 if confirmations[idx] is None:
-                    confirmations[idx] = True  # type: ignore
+                    confirmations[idx] = True
             dialog.destroy()
 
         def cancel_all():
             for idx in range(len(confirmations)):
                 if confirmations[idx] is None:
-                    confirmations[idx] = False  # type: ignore
+                    confirmations[idx] = False
             dialog.destroy()
 
-        confirm_all_button = tk.Button(button_frame, text="Confirm All", bg="green", fg="white", font=Styling.font_family, command=confirm_all)
+        confirm_all_button = tk.Button(button_frame, text="Confirm All", bg="green", fg="white", 
+                                font=Styling.font_family, command=confirm_all)
         confirm_all_button.pack(side=tk.LEFT, padx=5)
-        cancel_all_button = tk.Button(button_frame, text="Cancel All", bg="red", fg="white", font=Styling.font_family, command=cancel_all)
+        cancel_all_button = tk.Button(button_frame, text="Cancel All", bg="red", fg="white", 
+                                font=Styling.font_family, command=cancel_all)
         cancel_all_button.pack(side=tk.RIGHT, padx=5)
 
-        # Start
+        # Initial size calculation
+        dialog.update_idletasks()
+        adjust_dialog_size()
+
+        # Center window calculation
+        dialog.update_idletasks()
+        x = (screen_width - dialog.winfo_width()) // 2
+        y = (screen_height - dialog.winfo_height()) // 3  # Position upper third
+
+        # Set final position
+        dialog.geometry(f"+{int(x)}+{int(y)}")
+        
+        # Start dialog
         dialog.deiconify()
         self.master.withdraw()
         self.master.wait_window(dialog)
         self.master.deiconify()
-
-        # Remove dialog and recycle memory
-        dialog.destroy()
-        del dialog
-        gc.collect()
         
-        # Filter out None values before returning
         return [value if value is not None else False for value in confirmations]
 
     def FormatNames(self):
