@@ -132,7 +132,6 @@ class DesktopKOI:
 
     def on_drag_end(self, event):
         """Play animation after dragging ends."""
-        self.root.after(self.delay_animation, self.Animate)
         # get the current window position
         self.x, self.y = self.root.winfo_x(), self.root.winfo_y()
         self.animation_level = 0
@@ -140,6 +139,7 @@ class DesktopKOI:
 
         # record the end position
         self.usage_record.Update(KOI_position=(self.x, self.y))
+        self.root.after(self.delay_animation, self.Animate)
 
         # DEBUG
         # self.draw_boundary(self.x, self.y, self.x + self.width, self.y + self.height)
