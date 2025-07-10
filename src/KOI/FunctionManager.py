@@ -19,21 +19,25 @@ class FunctionManager:
     """Handles all the functions for KOI to call."""
     def __init__(self, master, desktop_koi, koi_menu):
         # Reference to main application and menu system
+        self.master = master
         self.desktop_koi = desktop_koi  
         self.koi_menu = koi_menu 
+
+        # Set up configuration
+        self.user_setting = UserSetting()
+        self.usage_record = UsageRecord()
         
-        # TODO: Auto load from config file
-        model: Optional[str] = "qwen3:0.6B" # change it to your model
-        api_type: str = "ollama"
-        host: str = "localhost"
-        port: Optional[int] = None
-        api_key: Optional[str] = None
+        # Load settings
+        model = str(self.user_setting.Get("function_model"))
+        api_type = str(self.user_setting.Get("function_api_type"))
+        host = str(self.user_setting.Get("function_host"))
+        port = self.user_setting.Get("function_port")
+        api_key: Optional[str] = None  # TODO
         version: Optional[str] = None
         
         self.on_task_format_names = False
         self.on_task_sort_files = False
 
-        self.master = master
         self.counsellor = Counsellor(model, api_type, host, port, api_key, version)
         self.listener = Listener(api_type, host, port, api_key, version)
 
@@ -54,6 +58,7 @@ class FunctionManager:
         dialog = tk.Toplevel(self.master)
         dialog.title("Confirm Changes")
         dialog.configure(bg='black')
+        dialog.attributes('-topmost', True)
         dialog.resizable(False, False)  # Forbid resizing
         dialog.withdraw()
 
@@ -215,9 +220,7 @@ class FunctionManager:
         
         # Start dialog
         dialog.deiconify()
-        self.master.withdraw()
         self.master.wait_window(dialog)
-        self.master.deiconify()
         
         return [value if value is not None else False for value in confirmations]
 

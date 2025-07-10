@@ -2,6 +2,7 @@ import threading
 import tkinter as tk
 from typing import Optional
 from .FunctionManager import FunctionManager
+from .ChatManager import ChatManager
 from .Styling import Styling
 
 # Developer Note:
@@ -13,8 +14,9 @@ class KOIMenu(tk.Toplevel):
         super().__init__(master)
         self.desktop_koi = desktop_koi
         
-        # Initialize function manager with required parameters
+        # Initialize managers
         self.function_manager = FunctionManager(self.master, desktop_koi=desktop_koi, koi_menu=self)
+        self.chat_manager = ChatManager(self.master, desktop_koi=desktop_koi, koi_menu=self)
         
         # Configure window
         self.title("KOI Menu")
@@ -137,7 +139,7 @@ class KOIMenu(tk.Toplevel):
     
     def button_chat(self):
         """Activate chat mode"""
-        # TODO: Implement chat mode
+        threading.Thread(target=self.chat_manager.Chat).start()
 
     def button_sort_files(self):
         """Choose files to relocate to different folders using AI"""

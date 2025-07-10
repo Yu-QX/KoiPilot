@@ -28,7 +28,19 @@ for path in [LOG_PATH, CONFIG_PATH, CHAT_HISTORY_PATH]:
 # Use default settings if no settings file exists
 
 DEFAULT_USER_SETTING = {
-    "animation_path": None
+    "animation_path": None,
+
+    # FunctionManager configs
+    "function_model": "qwen3:0.6B",
+    "function_api_type": "ollama",
+    "function_host": "localhost",
+    "function_port": 11434,
+
+    # ChatManager configs
+    "chat_model": "qwen3:latest",
+    "chat_api_type": "ollama",
+    "chat_host": "localhost",
+    "chat_port": 11434,
 }
 
 DEFAULT_USAGE_RECORD = {
@@ -153,8 +165,16 @@ class system_json:
         :param key: The key of the value to retrieve.
         :return: The value or None if the key does not exist.
         """
-        return self.data.get(key)
-
+        result = self.data.get(key)
+        if result is None:
+            # try to load from default
+            result = self.default_data.get(key)
+            if result is None:
+                result = None
+            else:
+                self.Update(**{key: result})
+                result = self.data.get(key)
+        return result
 
 class UserSetting(system_json):
     """A class to handle user settings."""
