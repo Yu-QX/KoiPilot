@@ -37,7 +37,7 @@ DEFAULT_USER_SETTING = {
     "function_port": 11434,
 
     # ChatManager configs
-    "chat_model": "qwen3:latest",
+    "chat_model": "qwen3:1.7B",
     "chat_api_type": "ollama",
     "chat_host": "localhost",
     "chat_port": 11434,

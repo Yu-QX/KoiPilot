@@ -34,6 +34,7 @@ class ChatManager:
         version: Optional[str] = None
 
         self.listener = Listener(api_type, host, port, api_key, version)
+        self.listener.SetModel(model)
         self.on_chat = False
         self.on_listen = False
         self.on_generate = False

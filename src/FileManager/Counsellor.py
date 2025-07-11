@@ -47,6 +47,7 @@ class Counsellor:
     """AI suggestions for file operations"""
     def __init__(self, model: Optional[str] = None, api_type: str = "ollama", host: str = "localhost", port: Optional[int] = None, api_key: Optional[str] = None, version: Optional[str] = None):
         self.listener = Listener(api_type, host, port, api_key, version)
+        self.listener.SetModel(model)
         self.messages = MessageManager()
         self.model = model
 

@@ -23,6 +23,7 @@ class OllamaListener:
         }
 
         self.check_connection()
+        self.model = self.pick_model()
 
         if self.api_key:
             self.logger.Log("<110001> API key is currently not supported.")
@@ -43,6 +44,16 @@ class OllamaListener:
             return False
 
     def pick_model(self) -> Optional[str]:
+        model_list = self.GetModels()
+        if model_list:
+            self.logger.Log("<110100> Model list retrieved successfully.")
+            return model_list[0]["name"]
+        else:
+            self.logger.Log("<110112> No valid model found.")
+            return None
+
+    def GetModels(self) -> Optional[list[dict]]:
+        """Get all available models"""
         full_url = urljoin(self.url, "/api/tags")
         try:
             response = requests.get(full_url, timeout=5)
@@ -51,7 +62,7 @@ class OllamaListener:
             if not isinstance(models, list) or len(models) == 0 or "name" not in models[0]:
                 self.logger.Log("<110112> Invalid or empty model data received.")
                 return None
-            return models[0]["name"]
+            return models
         except (requests.exceptions.RequestException, json.JSONDecodeError) as e:
             self.logger.Log(f"<110121> Error fetching models: {e}")
             return None
@@ -74,7 +85,7 @@ class OllamaListener:
                 data[key] = value
 
         if "model" not in data:
-            data["model"] = self.pick_model()
+            data["model"] = self.model
             if data["model"] is None:
                 self.logger.Log("<110112> No valid model found.")
                 return None
@@ -114,7 +125,7 @@ class OllamaListener:
                 data[key] = value
 
         if "model" not in data:
-            data["model"] = self.pick_model()
+            data["model"] = self.model
             if data["model"] is None:
                 self.logger.Log("<110112> No valid model found.")
                 return None
@@ -192,3 +203,16 @@ class OllamaListener:
             result_json = None
 
         return result_json
+    
+    def SetModel(self, model: Optional[str] = None):
+        """Set the model to use for generation"""
+        if (not isinstance(model, str)) or (not model):
+            self.logger.Log("<110112> Invalid model name provided.")
+            return
+        # Check whether model exists
+        models = self.GetModels()
+        if models is None or not any(m['name'] == model for m in models):
+            self.logger.Log("<110112> Model not found.")
+            return
+        self.model = model
+        self.logger.Log(f"<110100> Model set to {model}")

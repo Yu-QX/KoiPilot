@@ -98,3 +98,16 @@ class Listener:
         else:
             self.logger.Log(f"<110000> Generate succeeded.")
         return result if result is not None else {}
+
+    def SetModel(self, model: Optional[str] = None):
+        """
+        Set the model for the AI API.
+
+        :param model: The model to set.
+        """
+        if not isinstance(model, str):
+            self.logger.Log(f"<110011> Invalid model: {model}")
+        if hasattr(self.listener, "SetModel"):
+            self.listener.SetModel(model) # type: ignore
+        else:
+            self.logger.Log(f"<110021> The API does not support default model.")

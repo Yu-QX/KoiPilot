@@ -39,7 +39,7 @@ class FunctionManager:
         self.on_task_sort_files = False
 
         self.counsellor = Counsellor(model, api_type, host, port, api_key, version)
-        self.listener = Listener(api_type, host, port, api_key, version)
+        #self.listener = Listener(api_type, host, port, api_key, version)
 
     def confirmation_dialog(self, changes: Optional[dict] = None) -> list[bool]:
         """
