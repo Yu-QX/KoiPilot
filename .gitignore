@@ -196,3 +196,4 @@ cython_debug/
 # Develper Stuff
 LOG
 config
+chat_history

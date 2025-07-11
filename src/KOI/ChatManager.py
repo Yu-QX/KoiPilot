@@ -1,4 +1,5 @@
-import os, sys, time
+import os, sys
+import time, json, re
 import threading
 from typing import Optional
 import tkinter as tk
@@ -11,6 +12,7 @@ if APP_PATH not in sys.path:
 
 from Listeners import Listener
 from Environment import UsageRecord, UserSetting
+from Environment import CHAT_HISTORY_FILE, CHAT_HISTORY_PATH
 from .Styling import Styling
 
 class ChatManager:
@@ -40,13 +42,16 @@ class ChatManager:
         self.on_generate = False
 
         self.input_text = ""  # record input
+        self.output_text = ""
         self.response = ""
-        self.messages = []
+        self.max_dialog = 10
+        self.history = []
         
         # Styling
         self.font = tkinter.font.Font(family=Styling.font_family, size=Styling.font_size)
 
         # Set up GUI
+        self.load_chat_history()
         self.setup_speak_dialog()
         self.setup_listen_dialog()
         self.update_position()
@@ -171,7 +176,7 @@ class ChatManager:
         # Clear existing content
         self.response_label.config(state=tk.NORMAL)
         self.response_label.delete("1.0", tk.END)
-        self.response_label.insert("1.0", self.response)
+        self.response_label.insert("1.0", self.output_text)
         self.response_label.config(state=tk.DISABLED)
         
         # Update layout to calculate new dimensions
@@ -185,8 +190,8 @@ class ChatManager:
 
         # calculate new dimensions
         linespace = self.font.metrics("linespace")
-        length = self.font.measure(self.response)
-        text_area = linespace * length
+        length = self.font.measure(self.output_text)
+        text_area = linespace * length * 1.3
 
         new_height = linespace + 5
         new_width = 10
@@ -262,6 +267,40 @@ class ChatManager:
         self.listen_window.geometry(f"+{listen_final_x}+{listen_final_y}")
         self.speak_window.geometry(f"+{speak_final_x}+{speak_final_y}")
 
+    def load_chat_history(self):
+        """Load chat history from JSON file or create new file if not exists"""
+        try:
+            if not os.path.exists(CHAT_HISTORY_PATH):
+                os.makedirs(CHAT_HISTORY_PATH)
+            
+            if os.path.exists(CHAT_HISTORY_FILE):
+                with open(CHAT_HISTORY_FILE, 'r', encoding='utf-8') as f:
+                    self.history = json.load(f)
+            else:
+                with open(CHAT_HISTORY_FILE, 'w', encoding='utf-8') as f:
+                    json.dump([], f, indent=2)
+        except Exception as e:
+            print(f"Error loading chat history: {e}")
+            self.history = []
+
+    def save_chat_history(self):
+        """Save current chat history to JSON file"""
+        try:
+            with open(CHAT_HISTORY_FILE, 'w', encoding='utf-8') as f:
+                json.dump(self.history, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"Error saving chat history: {e}")
+
+    def process_response(self) -> str:
+        """Process KOI's response"""
+        result = self.response
+
+        # Remove <think> tags and their content (including newlines)
+        result = re.sub(r'<think>.*?</think>', '', result, flags=re.DOTALL)
+
+        self.output_text = result.strip()
+        return self.output_text
+    
     def Chat(self):
         """Chat with KOI"""
         if self.on_chat:
@@ -293,7 +332,8 @@ class ChatManager:
             if not self.on_chat:
                 break
 
-            prompt = self.input_text
+            user_input = self.input_text
+            prompt = user_input # TODO
             print(prompt)
 
             # Start response generation in a background thread
@@ -311,6 +351,17 @@ class ChatManager:
             if not self.on_chat:
                 break
             
+            self.process_response()
+            current_entry = {
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "user_input": user_input,
+                "koi_output": self.output_text,
+                "prompt": prompt,
+                "response": self.response,
+            }
+            self.history.append(current_entry)
+            self.save_chat_history()
+
             self.speak_window.deiconify()
             self.update_speak_content()
         
