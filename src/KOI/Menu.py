@@ -1,6 +1,6 @@
 import threading
 import tkinter as tk
-from typing import Optional
+from typing import Optional, Callable
 from .FunctionManager import FunctionManager
 from .ChatManager import ChatManager
 from .Styling import Styling
@@ -32,19 +32,41 @@ class KOIMenu(tk.Toplevel):
         self.width = 100  # Default width
         self.height = 20  # Default height
 
+        self.buttons = []
+
         # Create a canvas for rounded rectangle background
         self.canvas = tk.Canvas(self, bg="black", highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True)
         self.menu_visible = False
 
-        # Define button list and create buttons
-        self.buttons = []
-        self.button_list = {
+        # Hide menu initially
+        self.withdraw()
+        self.Buttons()
+
+    def Buttons(self, button_list: Optional[dict[str, Callable]] = None):
+        """
+        Create buttons for the menu.
+
+        :param button_list: A dictionary containing the button text and associated action. If not assigned, the function will use `self.button_list`.
+        """
+        DEFAULT_BUTTON_LIST = {
             "Sort Files": self.button_sort_files,
             "Format Names": self.button_format_names,
             "Chat": self.button_chat,
             "Exit": self.button_exit
         }  # TODO: Import `Messages` module
+
+        # Clear previous buttons and canvas
+        self.canvas.delete("all")
+        for btn in self.buttons: btn.destroy()
+        self.buttons.clear()
+        
+        # Define button list and create buttons
+        if button_list is None:
+            self.button_list = DEFAULT_BUTTON_LIST
+        else:
+            self.button_list = button_list
+
         for text, action in self.button_list.items():
             btn = tk.Button(
                 self.canvas, text=text, 
@@ -61,9 +83,6 @@ class KOIMenu(tk.Toplevel):
             
             self.buttons.append(btn)
         self.layout_buttons()
-
-        # Hide menu initially
-        self.withdraw()
 
     def layout_buttons(self):
         # Dynamically adjust width and height based on button count

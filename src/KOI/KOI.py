@@ -134,11 +134,21 @@ class DesktopKOI:
         """Play animation after dragging ends."""
         # get the current window position
         self.x, self.y = self.root.winfo_x(), self.root.winfo_y()
+
+        # Keep window in the screen
+        self.x = max(0, min(self.x, self.root.winfo_screenwidth() - self.width))
+        self.y = max(0, min(self.y, self.root.winfo_screenheight() - self.height))
+        self.root.geometry(f"+{self.x}+{self.y}")
+
+        # Release drag
         self.animation_level = 0
         self.on_drag = False
 
+        # Trigger update for ChatManager windows
+        self.root.event_generate("<Configure>")
         # record the end position
         self.usage_record.Update(KOI_position=(self.x, self.y))
+
         self.root.after(self.delay_animation, self.Animate)
 
         # DEBUG

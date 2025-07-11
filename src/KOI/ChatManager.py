@@ -1,4 +1,5 @@
-import os, sys
+import os, sys, time
+import threading
 from typing import Optional
 import tkinter as tk
 import tkinter.font
@@ -35,6 +36,7 @@ class ChatManager:
         self.listener = Listener(api_type, host, port, api_key, version)
         self.on_chat = False
         self.on_listen = False
+        self.on_generate = False
 
         self.input_text = ""  # record input
         self.response = ""
@@ -44,8 +46,11 @@ class ChatManager:
         self.font = tkinter.font.Font(family=Styling.font_family, size=Styling.font_size)
 
         # Set up GUI
-        self.setup_listen_dialog()
         self.setup_speak_dialog()
+        self.setup_listen_dialog()
+        self.update_position()
+        
+        self.desktop_koi.root.bind("<Configure>", lambda e=None: self.update_position())
 
     def setup_listen_dialog(self):
         """Get input from user"""
@@ -99,7 +104,7 @@ class ChatManager:
             new_height = (max(1, num_lines) + 1) * line_height
 
             self.listen_window.geometry(f"{new_width}x{new_height}")
-            update_position()
+            self.update_position()
 
         self.entry.bind("<KeyRelease>", lambda *args: update_size())
 
@@ -111,6 +116,7 @@ class ChatManager:
                 self.entry.delete("1.0", tk.END)
                 if self.on_listen:
                     self.input_text = input_text
+                    self.speak_window.withdraw()
                     self.on_listen = False
                 else:
                     tkinter.messagebox.showwarning("Warning", "Please wait for the previous message to finish processing.")
@@ -121,35 +127,6 @@ class ChatManager:
             else: pass
 
         self.entry.bind("<Return>", lambda e: on_send())
-
-        # Bind to desktop_koi position changes
-        def update_position():
-            """Update dialog position relative to desktop_koi and ensure on-screen visibility"""
-            self.listen_window.update_idletasks()
-
-            dialog_width = self.listen_window.winfo_width()
-            dialog_height = self.listen_window.winfo_height()
-
-            # Calculate target position
-            target_x = self.desktop_koi.x + (self.desktop_koi.width - dialog_width) // 2
-            target_y = self.desktop_koi.y - dialog_height - 5
-            
-            # Get screen dimensions
-            screen_width = self.master.winfo_screenwidth()
-            screen_height = self.master.winfo_screenheight()
-            
-            # Get dialog dimensions
-            dialog_width = self.listen_window.winfo_width()
-            dialog_height = self.listen_window.winfo_height()
-            
-            # Adjust position to stay on screen
-            final_x = min(target_x, screen_width - dialog_width - 10)
-            final_y = min(target_y, screen_height - dialog_height - 10)
-            
-            # Apply position
-            self.listen_window.geometry(f"+{final_x}+{final_y}")
-
-        self.desktop_koi.root.bind("<Configure>", lambda e=None: update_size())
         update_size()
 
     def setup_speak_dialog(self):
@@ -167,106 +144,176 @@ class ChatManager:
         self.speak_window.configure(bg='black')
         self.speak_window.wm_attributes("-transparentcolor", "black")
 
-        # Create response display area
-        self.response_label = tk.Label(
-            self.speak_window,
+        # Create response display area with scroll support
+        self.response_frame = tk.Frame(self.speak_window)
+        self.response_frame.pack(padx=5, pady=5)
+
+        self.response_label = tk.Text(
+            self.response_frame,
             bg=color_bg,
             fg=color_text,
             font=font,
-            wraplength=400,  # Initial wrap length
-            justify=tk.LEFT,
-            padx=10,
-            pady=5
+            wrap="word",
+            borderwidth=0,
+            highlightthickness=0,
+            state=tk.DISABLED
         )
-        self.response_label.pack(padx=5, pady=5)
+        self.response_label.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        # Update window size based on content
-        def update_size():
-            """Update window size based on response content"""
-            self.speak_window.update_idletasks()
-            
-            # Calculate required dimensions
-            text = self.response + "中"  # Add padding
-            req_width = self.font.measure(text)
-            
-            # Limit width to 3x desktop_koi width or 80% screen width
-            max_width = self.desktop_koi.width * 3
-            screen_width = self.master.winfo_screenwidth()
-            new_width = min(req_width, max_width, int(screen_width * 0.8))
-            
-            # Calculate lines and height
-            if self.response.strip():
-                num_lines = self.font.measure(self.response) // (new_width - self.font.measure('0')) + 1
-            else:
-                num_lines = 1
-            num_lines = min(num_lines, 10)  # Max 10 lines
-            
-            line_height = self.font.metrics("linespace")
-            new_height = (max(1, num_lines) + 2) * line_height
-            
-            # Update window dimensions
-            self.speak_window.geometry(f"{new_width}x{new_height}")
-            
-            # Update label wrap length based on new width
-            self.response_label.config(wraplength=new_width - 20)  # Subtract padding
-            
-            update_position()
+        self.scrollbar = tk.Scrollbar(self.response_frame, command=self.response_label.yview)
+        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        # Update response display
-        def update_content():
-            """Update response content and refresh display"""
-            self.response_label.config(text=self.response)
-            update_size()
+        self.response_label.config(yscrollcommand=self.scrollbar.set)
 
-        # Update dialog position relative to desktop_koi
-        def update_position():
-            """Update dialog position relative to desktop_koi and ensure on-screen visibility"""
-            self.speak_window.update_idletasks()
-
-            dialog_width = self.speak_window.winfo_width()
-            dialog_height = self.speak_window.winfo_height()
-
-            # Calculate target position
-            target_x = self.desktop_koi.x + (self.desktop_koi.width - dialog_width) // 2
-            target_y = self.desktop_koi.y + self.desktop_koi.height + 5
-            
-            # Get screen dimensions
-            screen_width = self.master.winfo_screenwidth()
-            screen_height = self.master.winfo_screenheight()
-            
-            # Adjust position to stay on screen
-            final_x = min(target_x, screen_width - dialog_width - 10)
-            final_y = min(target_y, screen_height - dialog_height - 10)
-            
-            # Apply position
-            self.speak_window.geometry(f"+{final_x}+{final_y}")
-
-        # Bind to desktop_koi position changes
-        self.desktop_koi.root.bind("<Configure>", lambda e=None: update_position())
+    def update_speak_content(self):
+        """Update response content and refresh display"""
+        # Clear existing content
+        self.response_label.config(state=tk.NORMAL)
+        self.response_label.delete("1.0", tk.END)
+        self.response_label.insert("1.0", self.response)
+        self.response_label.config(state=tk.DISABLED)
         
-        # Store update method for external access
-        self.update_speak_dialog = update_content
+        # Update layout to calculate new dimensions
+        self.speak_window.update_idletasks()
+        
+        # Apply size constraints
+        screen_width = self.master.winfo_screenwidth()
+        screen_height = self.master.winfo_screenheight()
+        max_width = min(4 * self.desktop_koi.width, int(screen_width * 0.8))
+        max_height = int(screen_height * 0.5)
+
+        # calculate new dimensions
+        linespace = self.font.metrics("linespace")
+        length = self.font.measure(self.response)
+        text_area = linespace * length
+
+        new_height = linespace + 5
+        new_width = 10
+        self.speak_window.geometry(f"{new_width}x{new_height}")
+        self.update_position()
+
+        while True:
+            self.speak_window.update_idletasks()
+            if text_area > new_width * new_height:
+                if new_width < max_width:
+                    new_width += 10
+                elif new_height < max_height:
+                    new_height += self.font.metrics("linespace")
+                else:
+                    break
+            else:
+                break    
+            self.speak_window.geometry(f"{new_width}x{new_height}")
+            self.update_position()
+    
+        self.update_position()
+
+    def update_position(self):
+        """Update dialog position relative to desktop_koi and ensure on-screen visibility"""
+        self.listen_window.update_idletasks()
+        self.speak_window.update_idletasks()
+
+        listen_dialog_width = self.listen_window.winfo_width()
+        listen_dialog_height = self.listen_window.winfo_height()
+        speak_dialog_width = self.speak_window.winfo_width()
+        speak_dialog_height = self.speak_window.winfo_height()
+
+        screen_width = self.master.winfo_screenwidth()
+        screen_height = self.master.winfo_screenheight()
+
+        margin_width = 5
+        space_koi_listen = 10
+        space_listen_speak = 5
+
+        # Calculate target positions
+        # listen_window: above desktop_koi with 10px margin
+        listen_target_x = self.desktop_koi.x + (self.desktop_koi.width - listen_dialog_width) // 2
+        listen_target_y = self.desktop_koi.y - listen_dialog_height - space_koi_listen
+
+        # speak_window: above listen_window with 5px margin
+        speak_target_x = self.desktop_koi.x + (self.desktop_koi.width - speak_dialog_width) // 2
+        speak_target_y = listen_target_y - speak_dialog_height - space_listen_speak
+
+        # Adjust positions to stay on screen
+        # adjust x
+        listen_final_x = min(listen_target_x, screen_width - listen_dialog_width - margin_width)
+        listen_final_x = max(listen_final_x, margin_width)
+        speak_final_x = min(speak_target_x, screen_width - speak_dialog_width - margin_width)
+        speak_final_x = max(speak_final_x, margin_width)
+        
+        # adjust y
+        listen_final_y = listen_target_y
+        speak_final_y = speak_target_y
+        # if the speak_window is visible and it is off-screen
+        if speak_final_y < margin_width and self.speak_window.winfo_ismapped():
+            speak_final_y = margin_width
+            listen_final_y = speak_final_y + speak_dialog_height + space_listen_speak
+            # relocate desktop_koi
+            self.desktop_koi.y = listen_final_y + listen_dialog_height + space_koi_listen
+            self.desktop_koi.root.geometry(f"+{self.desktop_koi.x}+{self.desktop_koi.y}")
+        elif listen_final_y < margin_width and not self.speak_window.winfo_ismapped() and self.listen_window.winfo_ismapped():
+            listen_final_y = margin_width
+            # relocate desktop_koi
+            self.desktop_koi.y = listen_final_y + listen_dialog_height + space_koi_listen
+            self.desktop_koi.root.geometry(f"+{self.desktop_koi.x}+{self.desktop_koi.y}")
+
+        # Apply positions
+        self.listen_window.geometry(f"+{listen_final_x}+{listen_final_y}")
+        self.speak_window.geometry(f"+{speak_final_x}+{speak_final_y}")
 
     def Chat(self):
         """Chat with KOI"""
         if self.on_chat:
             return
         self.on_chat = True
-        self.listen_window.deiconify()
 
-        while True:
+        self.listen_window.deiconify()
+        self.update_position()
+        self.koi_menu.Buttons({
+            "Exit Chat": lambda: setattr(self, 'on_chat', False)
+        })
+
+        def generate_response_async(prompt):
+            self.on_generate = True
+            self.response = self.listener.Generate(prompt=prompt)
+            self.on_generate = False
+
+        while self.on_chat:
             # Wait for user input
             self.on_listen = True
-            while self.on_listen:
+            while self.on_listen and self.on_chat:
                 # wait for user input
-                self.master.update()
-                    
+                try:
+                    self.master.update()
+                except RuntimeError:
+                    print("Main thread terminated")
+                    self.on_chat = False
+                    return
+            if not self.on_chat:
+                break
+
             prompt = self.input_text
+            print(prompt)
+
+            # Start response generation in a background thread
+            threading.Thread(target=generate_response_async, args=(prompt,)).start()
+            threading.Thread(target=self.desktop_koi.Animate).start()
             self.input_text = ""
-            self.response = self.listener.Generate(prompt=prompt)
+            self.on_generate = True
+            while self.on_chat and self.on_generate:
+                try:
+                    self.master.update()
+                except RuntimeError:
+                    print("Main thread terminated")
+                    self.on_chat = False
+                    return
+            if not self.on_chat:
+                break
             
             self.speak_window.deiconify()
-            self.update_speak_dialog()
-            self.speak_window.after(10000, self.speak_window.withdraw)
+            self.update_speak_content()
         
+        self.speak_window.withdraw()
+        self.listen_window.withdraw()        
+        self.koi_menu.Buttons()
         self.on_chat = False
