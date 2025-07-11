@@ -147,7 +147,7 @@ class ChatManager:
 
         # Create response display area with scroll support
         self.response_frame = tk.Frame(self.speak_window)
-        self.response_frame.pack(padx=5, pady=5)
+        self.response_frame.pack(fill=tk.BOTH, expand=True)
 
         self.response_label = tk.Text(
             self.response_frame,
@@ -199,7 +199,7 @@ class ChatManager:
                 if new_width < max_width:
                     new_width += 10
                 elif new_height < max_height:
-                    new_height += self.font.metrics("linespace")
+                    new_height += linespace
                 else:
                     break
             else:

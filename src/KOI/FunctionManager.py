@@ -212,6 +212,7 @@ class FunctionManager:
 
         # Center window calculation
         dialog.update_idletasks()
+        dialog.deiconify()
         x = (screen_width - dialog.winfo_width()) // 2
         y = (screen_height - dialog.winfo_height()) // 3  # Position upper third
 

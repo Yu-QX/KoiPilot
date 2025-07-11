@@ -19,7 +19,9 @@ class KOIMenu(tk.Toplevel):
         self.chat_manager = ChatManager(self.master, desktop_koi=desktop_koi, koi_menu=self)
         
         # Configure window
+        self.withdraw()
         self.title("KOI Menu")
+        self.resizable(False, False)
         self.overrideredirect(True)
         self.attributes('-topmost', True)
         self.configure(bg='black')
@@ -49,7 +51,6 @@ class KOIMenu(tk.Toplevel):
         self.bind("<Leave>", self.on_mouse_leave)
 
         # Hide menu initially
-        self.withdraw()
         self.Buttons()
 
     def on_mouse_enter(self, event=None):
