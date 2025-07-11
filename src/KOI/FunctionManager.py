@@ -360,7 +360,3 @@ class FunctionManager:
         if suggestion:
             local_changes[file] = suggestion
         return
-
-    def Chat(self):
-        """Chat with the AI."""
-        

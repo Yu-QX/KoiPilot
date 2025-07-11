@@ -33,15 +33,119 @@ class KOIMenu(tk.Toplevel):
         self.height = 20  # Default height
 
         self.buttons = []
-
+        
         # Create a canvas for rounded rectangle background
         self.canvas = tk.Canvas(self, bg="black", highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True)
         self.menu_visible = False
+        
+        # Add auto-hide timer tracking
+        self.hide_timer = None      # For mouse leave timer
+        self.show_timer = None      # For initial show timer
+        self.auto_hide_delay = 3000  # 3 seconds in milliseconds
+        
+        # Bind mouse events for auto-hide
+        self.bind("<Enter>", self.on_mouse_enter)
+        self.bind("<Leave>", self.on_mouse_leave)
 
         # Hide menu initially
         self.withdraw()
         self.Buttons()
+
+    def on_mouse_enter(self, event=None):
+        """Cancel all timers when mouse enters menu area"""
+        # Cancel both timers
+        if self.hide_timer:
+            self.after_cancel(self.hide_timer)
+            self.hide_timer = None
+        if self.show_timer:
+            self.after_cancel(self.show_timer)
+            self.show_timer = None
+    
+    def on_mouse_leave(self, event=None):
+        """Start timer to hide menu when mouse leaves menu area"""
+        if not self.menu_visible:
+            return
+            
+        # Cancel previous timers
+        if self.show_timer:
+            self.after_cancel(self.show_timer)
+            self.show_timer = None
+        if self.hide_timer:
+            self.after_cancel(self.hide_timer)
+            self.hide_timer = None
+            
+        # Start new hide timer
+        self.hide_timer = self.after(self.auto_hide_delay, self.Hide)
+
+    def Show(self, event: Optional[tk.Event] = None):
+        """Show the menu with a fade-in effect"""
+        if self.menu_visible or getattr(self.desktop_koi, 'on_drag', False):
+            return
+
+        # Cancel any existing timers
+        if self.show_timer:
+            self.after_cancel(self.show_timer)
+            self.show_timer = None
+        if self.hide_timer:
+            self.after_cancel(self.hide_timer)
+            self.hide_timer = None
+
+        # Ensure we have current geometry values
+        self.master.update_idletasks()
+
+        # Calculate position (centered relative to main window)
+        master_x = self.master.winfo_x()
+        master_y = self.master.winfo_y()
+        master_width = self.master.winfo_width()
+        center_x = int(master_x + (master_width / 2))
+        center_y = int(master_y)
+
+        # Set menu dimensions
+        menu_width = self.width
+        menu_height = self.height
+        post_x = center_x - (menu_width // 2)
+        post_y = center_y - menu_height
+
+        # Record position and set geometry
+        self.x1, self.y1 = post_x, post_y
+        self.x2, self.y2 = post_x + menu_width, post_y + menu_height
+        self.geometry(f"{menu_width}x{menu_height}+{post_x}+{post_y}")
+
+        # Fade-in effect
+        self.attributes("-alpha", 0.0)
+        self.deiconify()
+        steps = 10
+        step_delay = self.duration_fade // steps
+        for i in range(1, steps + 1):
+            self.after(i * step_delay, lambda a=i / steps: self.attributes("-alpha", a))
+        self.menu_visible = True
+        
+        # Start initial hide timer (3 seconds from showing)
+        self.show_timer = self.after(self.auto_hide_delay, self.Hide)
+
+    def Hide(self, event: Optional[tk.Event] = None):
+        """Hide the menu with a fade-out effect"""
+        if not self.menu_visible:
+            return
+
+        # Cancel all timers
+        if self.show_timer:
+            self.after_cancel(self.show_timer)
+            self.show_timer = None
+        if self.hide_timer:
+            self.after_cancel(self.hide_timer)
+            self.hide_timer = None
+
+        # Fade-out effect
+        steps = 10
+        step_delay = self.duration_fade // steps
+        for i in range(steps, -1, -1):
+            self.after((steps - i) * step_delay, lambda a=i / steps: self.attributes("-alpha", a))
+
+        # Withdraw the window after fading out
+        self.after(self.duration_fade, self.withdraw)
+        self.menu_visible = False
 
     def Buttons(self, button_list: Optional[dict[str, Callable]] = None):
         """
@@ -106,56 +210,6 @@ class KOIMenu(tk.Toplevel):
         # Draw lines between buttons
         # TODO: add this
 
-    def Show(self, event: Optional[tk.Event] = None):
-        """Show the menu with a fade-in effect"""
-        if self.menu_visible or getattr(self.desktop_koi, 'on_drag', False):
-            return
-
-        # Ensure we have current geometry values
-        self.master.update_idletasks()
-
-        # Calculate position (centered relative to main window)
-        master_x = self.master.winfo_x()
-        master_y = self.master.winfo_y()
-        master_width = self.master.winfo_width()
-        center_x = int(master_x + (master_width / 2))
-        center_y = int(master_y)
-
-        # Set menu dimensions
-        menu_width = self.width
-        menu_height = self.height
-        post_x = center_x - (menu_width // 2)
-        post_y = center_y - menu_height
-
-        # Record position and set geometry
-        self.x1, self.y1 = post_x, post_y
-        self.x2, self.y2 = post_x + menu_width, post_y + menu_height
-        self.geometry(f"{menu_width}x{menu_height}+{post_x}+{post_y}")
-
-        # Fade-in effect
-        self.attributes("-alpha", 0.0)
-        self.deiconify()
-        steps = 10
-        step_delay = self.duration_fade // steps
-        for i in range(1, steps + 1):
-            self.after(i * step_delay, lambda a=i / steps: self.attributes("-alpha", a))
-        self.menu_visible = True
-
-    def Hide(self, event: Optional[tk.Event] = None):
-        """Hide the menu with a fade-out effect"""
-        if not self.menu_visible:
-            return
-
-        # Fade-out effect
-        steps = 10
-        step_delay = self.duration_fade // steps
-        for i in range(steps, -1, -1):
-            self.after((steps - i) * step_delay, lambda a=i / steps: self.attributes("-alpha", a))
-
-        # Withdraw the window after fading out
-        self.after(self.duration_fade, self.withdraw)
-        self.menu_visible = False
-    
     def button_chat(self):
         """Activate chat mode"""
         threading.Thread(target=self.chat_manager.Chat).start()
