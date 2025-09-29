@@ -28,7 +28,7 @@ class DesktopKOI:
         self.animation_path = self.user_setting.Get("animation_path")
         
         self.height, self.width = 0, 0
-        self.animation_level = 0
+        self.animating_level = []  # List of currently animating animation levels. Max: 10 (Stop playing all due to sprcial event); Min: 0 (Nothing played).
         self.mood = ""
 
         # Launch window
@@ -119,7 +119,7 @@ class DesktopKOI:
         self.on_drag = True
         self.start_x = event.x
         self.start_y = event.y
-        self.animation_level = 10
+        self.animating_level.append(10)
         self.menu.Hide()
 
         # DEBUG
@@ -141,7 +141,7 @@ class DesktopKOI:
         self.root.geometry(f"+{self.x}+{self.y}")
 
         # Release drag
-        self.animation_level = 0
+        self.animating_level.remove(10)
         self.on_drag = False
 
         # Trigger update for ChatManager windows
@@ -172,21 +172,27 @@ class DesktopKOI:
         self.height = preparatory_animation[0].height()
         self.root.geometry(f"{self.width}x{self.height}+{self.x}+{self.y}")
 
-    def Animate(self, animation_level: int = 0, reset_mood: bool = True):
+    def Animate(self, animation_level: int = 1, reset_mood: bool = True, new: bool = True):
         """Animate for one cycle"""
         if not self.current_animation:
             return
+        if new:
+            if len(self.animating_level) > 0:
+                if animation_level <= max(self.animating_level):  # Higher level ignored
+                    return
+            self.animating_level.append(animation_level)
 
         self.label.config(image=self.current_animation[self.current_frame])
         self.current_frame = (self.current_frame + 1) % len(self.current_animation)
 
-        if self.current_frame != 0 and self.animation_level <= animation_level:  # Continue until the end of the cycle or a higher level take over
-            self.root.after(self.delay_frame, self.Animate, (animation_level))
+        if self.current_frame != 0 and animation_level == max(self.animating_level):  # Continue until the end of the cycle or a higher level take over
+            self.root.after(self.delay_frame, self.Animate, animation_level, reset_mood, False)
         else:
             self.current_frame = 0
             self.label.config(image=self.current_animation[self.current_frame])  # Reset to first frame
             if reset_mood:
                 self.SetMood()
+            self.animating_level.remove(animation_level)
 
     # DEBUG
     # def clear_boundary(self):
