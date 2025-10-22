@@ -5,11 +5,14 @@ def GetOllamaListener(host, port, api_key, version) -> object:
     if port is None:
         port = 11434
     if version is None:
-        version = "v0.9.0"
+        version = "v0.12"
 
     # Get the Ollama listener
     if version == "v0.9.0":
         from .v0_9_0 import OllamaListener
+        return OllamaListener(host, port, api_key)
+    elif version == "v0.12":
+        from .v0_12 import OllamaListener
         return OllamaListener(host, port, api_key)
     else:
         raise ValueError(f"Invalid Ollama version: {version}")
