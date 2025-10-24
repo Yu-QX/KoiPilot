@@ -1,11 +1,13 @@
 import os, sys
-from typing import Optional
+from typing import Optional, Union
+from dataclasses import asdict
 
 APP_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if APP_PATH not in sys.path:
     sys.path.append(APP_PATH)
 
 from Environment import Logger
+from .config import ListenerConfig
 
 class Listener:
     """
@@ -13,10 +15,17 @@ class Listener:
     It provides methods for generating text, handling chat interactions, and generating JSON responses.
     """
 
-    def __init__(self, api_type: str = "ollama", host: str = "localhost", port: Optional[int] = None, api_key: Optional[str] = None, version: Optional[str] = None):
+    def __init__(self, 
+                 config: Optional[ListenerConfig] = None, 
+                 api_type: Optional[str] = None, 
+                 host: Optional[str] = None, 
+                 port: Optional[int] = None, 
+                 api_key: Optional[str] = None, 
+                 version: Optional[str] = None):
         """
         Initialize the `Listener` class.
 
+        :param config: A ListenerConfig object with all configuration parameters.
         :param api_type: The type of AI API to use. Defaults to "ollama".
         :param host: The host of the AI API. Defaults to "localhost".
         :param port: The port of the AI API. Defaults to None.
@@ -24,11 +33,35 @@ class Listener:
         :param version: The version of the AI API. Defaults to None.
         """
         self.logger = Logger("Listener")
-        self.api_type = api_type
-        self.api_key = api_key
-        self.host = host
-        self.port = port
-        self.version = version
+        
+        # If no config provided, create one with the provided parameters or defaults
+        if config is None:
+            # Use provided parameters or None (will be set to defaults in ListenerConfig)
+            config_params = {
+                k: v for k, v in {
+                    'api_type': api_type,
+                    'host': host,
+                    'port': port,
+                    'api_key': api_key,
+                    'version': version
+                }.items() if v is not None
+            }
+            config = ListenerConfig(**config_params)
+        # If both config and parameters provided, merge them (parameters take precedence)
+        elif any(param is not None for param in [api_type, host, port, api_key, version]):
+            config_dict = asdict(config)
+            config_dict.update({
+                k: v for k, v in {
+                    'api_type': api_type,
+                    'host': host,
+                    'port': port,
+                    'api_key': api_key,
+                    'version': version
+                }.items() if v is not None
+            })
+            config = ListenerConfig(**config_dict)
+            
+        self.config = config
         self.listener = self.load_listener()
     
     def load_listener(self) -> object:
@@ -37,9 +70,9 @@ class Listener:
 
         :return: The loaded AI API object.
         """
-        if self.api_type == "ollama":
+        if self.config.api_type == "ollama":
             from .Ollama import GetOllamaListener
-            return GetOllamaListener(self.host, self.port, self.api_key, self.version)
+            return GetOllamaListener(self.config)
         else:
             self.logger.Log(f"<110001> Invalid API type:")
             raise ValueError(f"Invalid API type:")

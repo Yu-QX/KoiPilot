@@ -10,7 +10,7 @@ APP_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if APP_PATH not in sys.path:
     sys.path.append(APP_PATH)
 
-from Listeners import Listener
+from Listeners import Listener, ListenerConfig
 from Environment import UsageRecord, UserSetting
 from Environment import CHAT_HISTORY_FILE, CHAT_HISTORY_PATH
 from .Styling import Styling
@@ -35,7 +35,14 @@ class ChatManager:
         api_key: Optional[str] = None  # TODO
         version: Optional[str] = None
 
-        self.listener = Listener(api_type, host, port, api_key, version)
+        config = ListenerConfig(
+            api_type=api_type,
+            host=host,
+            port=port,
+            api_key=api_key,
+            version=version
+        )
+        self.listener = Listener(config=config)
         self.listener.SetModel(model)
         self.on_chat = False
         self.on_listen = False

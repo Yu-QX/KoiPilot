@@ -6,7 +6,7 @@ APP_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if APP_PATH not in sys.path:
     sys.path.append(APP_PATH)
 
-from Listeners import Listener
+from Listeners import Listener, ListenerConfig
 from Messages import MessageManager
 
 def find_closest_match(string: str, options: list[str]) -> Optional[str]:
@@ -46,7 +46,14 @@ def find_closest_match(string: str, options: list[str]) -> Optional[str]:
 class Counsellor:
     """AI suggestions for file operations"""
     def __init__(self, model: Optional[str] = None, api_type: str = "ollama", host: str = "localhost", port: Optional[int] = None, api_key: Optional[str] = None, version: Optional[str] = None):
-        self.listener = Listener(api_type, host, port, api_key, version)
+        config = ListenerConfig(
+            api_type=api_type,
+            host=host,
+            port=port,
+            api_key=api_key,
+            version=version
+        )
+        self.listener = Listener(config=config)
         self.listener.SetModel(model)
         self.messages = MessageManager()
         self.model = model

@@ -1,19 +1,17 @@
-def GetOllamaListener(host, port, api_key, version) -> object:
-    # Default values
-    if host is None:
-        host = "localhost"
-    if port is None:
-        port = 11434
-    if version is None:
-        version = "v0.12"
+from typing import Union
+from ..config import ListenerConfig
 
+def GetOllamaListener(config: Union[ListenerConfig, dict]) -> object:
+    # If config is a dict, convert it to ListenerConfig
+    if isinstance(config, dict):
+        config = ListenerConfig(**config)
+    
     # Get the Ollama listener
-    if version == "v0.9.0":
+    if config.version == "v0.9.0":
         from .v0_9_0 import OllamaListener
-        return OllamaListener(host, port, api_key)
-    elif version == "v0.12":
+        return OllamaListener(config)
+    elif config.version == "v0.12":
         from .v0_12 import OllamaListener
-        return OllamaListener(host, port, api_key)
+        return OllamaListener(config)
     else:
-        raise ValueError(f"Invalid Ollama version: {version}")
-        # return 110102
+        raise ValueError(f"Invalid Ollama version: {config.version}")

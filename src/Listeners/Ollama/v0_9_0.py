@@ -9,13 +9,15 @@ if APP_PATH not in sys.path:
     sys.path.append(APP_PATH)
 
 from Environment import Logger
+from ..config import ListenerConfig
 
 class OllamaListener:
-    def __init__(self, host: str = "localhost", port: int = 11434, api_key: Optional[str] = None):
+    def __init__(self, config: ListenerConfig):
         self.logger = Logger("OllamaListener")
-        self.host = host
-        self.port = port
-        self.api_key = api_key
+        self.config = config
+        self.host = config.host
+        self.port = config.port
+        self.api_key = config.api_key
         
         self.url = f"http://{self.host}:{self.port}"
         self.headers = {

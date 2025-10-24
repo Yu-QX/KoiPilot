@@ -10,14 +10,16 @@ if APP_PATH not in sys.path:
     sys.path.append(APP_PATH)
 
 from Environment import Logger
+from ..config import ListenerConfig
 
 
 class OllamaListener:
-    def __init__(self, host: str = "localhost", port: int = 11434, api_key: Optional[str] = None):
+    def __init__(self, config: ListenerConfig):
         self.logger = Logger("OllamaListener")
-        self.host = host
-        self.port = port
-        self.api_key = api_key
+        self.config = config
+        self.host = config.host
+        self.port = config.port
+        self.api_key = config.api_key
 
         self.url = f"http://{self.host}:{self.port}"
         self.headers = {
@@ -30,7 +32,7 @@ class OllamaListener:
         if self.api_key:
             self.logger.Log("<110001> API key is currently not supported.")
 
-    def _make_request(self, method: str, url: str, data: Optional[bytes] = None, timeout: int = 5) -> Optional[dict]:
+    def make_request(self, method: str, url: str, data: Optional[bytes] = None, timeout: int = 5) -> Optional[dict]:
         """
         Helper function to make HTTP requests using urllib.
 
@@ -97,7 +99,7 @@ class OllamaListener:
     def GetModels(self) -> Optional[list[dict]]:
         """Get all available models"""
         full_url = urllib.parse.urljoin(self.url, "/api/tags")
-        result = self._make_request("GET", full_url, timeout=5)
+        result = self.make_request("GET", full_url, timeout=5)
         if result is None:
             return None
 
@@ -135,7 +137,7 @@ class OllamaListener:
         full_url = urllib.parse.urljoin(self.url, endpoint)
         data_bytes = json.dumps(data).encode('utf-8')
 
-        return self._make_request("POST", full_url, data=data_bytes, timeout=30)
+        return self.make_request("POST", full_url, data=data_bytes, timeout=30)
 
     def ChatRaw(self, messages: list, **kwargs) -> Optional[dict]:
         """The basic chat function"""
@@ -165,7 +167,7 @@ class OllamaListener:
         full_url = urllib.parse.urljoin(self.url, endpoint)
         data_bytes = json.dumps(data).encode('utf-8')
 
-        return self._make_request("POST", full_url, data=data_bytes, timeout=30)
+        return self.make_request("POST", full_url, data=data_bytes, timeout=30)
 
     def Generate(self, prompt: str, **kwargs) -> Optional[str]:
         """Generate returning with string"""
